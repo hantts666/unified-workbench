@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../../.generated/platform"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+datasource db {
+  provider = "postgresql"
+  url = env("PLATFORM_DATABASE_URL")
+}
+model User {
+  id String @id @default(cuid())
+  account String @unique
+  displayName String
+  passwordHash String
+  active Boolean @default(true)
+  authzVersion Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions Session[]
+  companies UserCompany[]
+  assignments RoleAssignment[]
+}
+model Session {
+  tokenHash String @id
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId, expiresAt])
+}
+model Company {
+  id String @id @default(cuid())
+  name String
+  abbreviation String
+  taxId String @default("")
+  active Boolean @default(true)
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members UserCompany[]
+}
+model UserCompany {
+  userId String
+  companyId String
+  active Boolean @default(true)
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  company Company @relation(fields:[companyId], references:[id], onDelete:Restrict)
+  assignments RoleAssignment[]
+  @@id([userId, companyId])
+}
+model Application {
+  id String @id @default(cuid())
+  code String @unique
+  name String
+  activeRule String @unique
+  entryKey String
+  active Boolean @default(true)
+  version Int @default(1)
+  roles Role[]
+  permissions Permission[]
+}
+model Permission {
+  id String @id @default(cuid())
+  applicationId String
+  application Application @relation(fields:[applicationId], references:[id], onDelete:Restrict)
+  code String @unique
+  scopeType String
+  description String @default("")
+  roles RolePermission[]
+  @@unique([id, applicationId, scopeType])
+}
+model Role {
+  id String @id @default(cuid())
+  applicationId String
+  application Application @relation(fields:[applicationId], references:[id], onDelete:Restrict)
+  code String
+  name String
+  scopeType String
+  active Boolean @default(true)
+  permissions RolePermission[]
+  assignments RoleAssignment[]
+  @@unique([applicationId, code])
+  @@unique([id, applicationId, scopeType])
+}
+model RolePermission {
+  roleId String
+  permissionId String
+  applicationId String
+  scopeType String
+  role Role @relation(fields:[roleId, applicationId, scopeType], references:[id, applicationId, scopeType], onDelete:Cascade)
+  permission Permission @relation(fields:[permissionId, applicationId, scopeType], references:[id, applicationId, scopeType], onDelete:Restrict)
+  @@id([roleId, permissionId])
+}
+model RoleAssignment {
+  id String @id @default(cuid())
+  userId String
+  roleId String
+  applicationId String
+  scopeType String
+  companyId String?
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  role Role @relation(fields:[roleId, applicationId, scopeType], references:[id, applicationId, scopeType], onDelete:Restrict)
+  membership UserCompany? @relation(fields:[userId, companyId], references:[userId, companyId], onDelete:Restrict)
+  @@index([userId, applicationId, companyId])
+}
+model PlatformAudit {
+  id String @id @default(cuid())
+  actorId String
+  action String
+  resourceType String
+  resourceId String
+  detail Json
+  createdAt DateTime @default(now())
+  @@index([actorId, createdAt])
+}

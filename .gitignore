@@ -11,6 +11,7 @@ node_modules/
 *.db
 *.dump
 *.sql
+!prisma/**/migrations/**/migration.sql
 *.tar
 *.tar.gz
 *.zip
@@ -23,6 +24,7 @@ test-results/
 playwright-report/
 coverage/
 dist/
+.generated/
 .DS_Store
 Thumbs.db
 __pycache__/

@@ -9,7 +9,7 @@ export const SECRET_PATTERNS = [
   /(?:postgres(?:ql)?|mysql|mariadb):\/\/[^\s:@]+:[^\s@]+@/i,
   /\bAKIA[A-Z0-9]{16}\b/,
 ];
-const ignored = new Set(['.git','node_modules','.local','test-results','coverage','dist','playwright-report']);
+const ignored = new Set(['.git','node_modules','.local','.generated','test-results','coverage','dist','playwright-report']);
 
 export function audit(root) {
   const findings=[];
@@ -22,7 +22,8 @@ export function audit(root) {
       if (entry.isSymbolicLink()) {findings.push(`${relative}: 公共项目不允许链接到外部文件`);continue;}
       if (entry.isDirectory()) {walk(absolute);continue;}
       files++;
-      if ((entry.name.startsWith('.env') && entry.name!=='.env.example') || /(?:^|\/)(?:secrets|\.secrets|uploads|backups)\//i.test(relative) || /\.(pem|key|p12|pfx|sql|dump|sqlite3?|db|zip|tar|gz)$/i.test(entry.name)) findings.push(`${relative}: 私密或数据文件类型`);
+      const sourceMigration=/^prisma\/[a-z-]+\/migrations\/[a-z0-9_-]+\/migration\.sql$/.test(relative);
+      if ((entry.name.startsWith('.env') && entry.name!=='.env.example') || /(?:^|\/)(?:secrets|\.secrets|uploads|backups)\//i.test(relative) || (!sourceMigration && /\.(pem|key|p12|pfx|sql|dump|sqlite3?|db|zip|tar|gz)$/i.test(entry.name))) findings.push(`${relative}: 私密或数据文件类型`);
       const buffer=fs.readFileSync(absolute);
       if (buffer.includes(0)) {findings.push(`${relative}: 未预期二进制文件，请人工审查`);continue;}
       const content=buffer.toString('utf8');

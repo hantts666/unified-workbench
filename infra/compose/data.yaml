@@ -1,0 +1,48 @@
+name: unified-workbench
+services:
+  platform-postgres:
+    image: postgres:18.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: platform
+      POSTGRES_USER: platform_owner
+      POSTGRES_PASSWORD: ${PLATFORM_DB_OWNER_PASSWORD:?required}
+      APP_DB_USER: platform_app
+      APP_DB_PASSWORD: ${PLATFORM_DB_APP_PASSWORD:?required}
+    volumes:
+      - platform-postgres-data:/var/lib/postgresql
+      - ./init-db.sh:/docker-entrypoint-initdb.d/10-app-role.sh:ro
+    ports: ['127.0.0.1:15432:5432']
+    networks: [platform-data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U platform_owner -d platform']
+      interval: 5s
+      retries: 30
+    mem_limit: 512m
+  finance-postgres:
+    image: postgres:18.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: finance
+      POSTGRES_USER: finance_owner
+      POSTGRES_PASSWORD: ${FINANCE_DB_OWNER_PASSWORD:?required}
+      APP_DB_USER: finance_app
+      APP_DB_PASSWORD: ${FINANCE_DB_APP_PASSWORD:?required}
+    volumes:
+      - finance-postgres-data:/var/lib/postgresql
+      - ./init-db.sh:/docker-entrypoint-initdb.d/10-app-role.sh:ro
+    ports: ['127.0.0.1:15433:5432']
+    networks: [finance-data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U finance_owner -d finance']
+      interval: 5s
+      retries: 30
+    mem_limit: 512m
+networks:
+  platform-data:
+    internal: true
+  finance-data:
+    internal: true
+volumes:
+  platform-postgres-data:
+  finance-postgres-data:

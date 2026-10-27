@@ -11,7 +11,7 @@ $taskArchive=Join-Path $taskLocal "source-$taskSha.tar"
 & git -C $taskRoot archive --format=tar -o $taskArchive HEAD
 if($LASTEXITCODE -ne 0){throw 'Source archive failed'}
 $taskRemote="$RemoteRoot/releases/$taskSha"
-$taskPrepare='sudo install -d -m 0750 -o "$(id -un)" -g "$(id -gn)" '+$taskRemote
+$taskPrepare='sudo install -d -m 0750 -o "$(id -un)" -g "$(id -gn)" '+$RemoteRoot+' '+$RemoteRoot+'/releases '+$taskRemote
 & ssh -o BatchMode=yes $SshHost $taskPrepare
 if($LASTEXITCODE -ne 0){throw 'Remote release directory unavailable'}
 & scp -q $taskArchive "${SshHost}:${taskRemote}/source.tar"

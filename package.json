@@ -4,11 +4,15 @@
   "private": true,
   "description": "统一管理平台与乾坤财务子系统：可执行规格及开发准备",
   "type": "module",
+  "overrides": {"@prisma/config": {"deepmerge-ts": "8.0.0", "effect": "3.20.0"}},
   "engines": {
     "node": ">=24 <25"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "db:generate": "node scripts/generate-clients.mjs",
+    "db:migrate:test": "node scripts/migrate-test-databases.mjs",
+    "test:database": "node tests/database-isolation.integration.mjs",
     "build:poc": "node scripts/build-poc.mjs",
     "test:poc": "node tests/poc-browser.mjs",
     "spec:check": "node scripts/specctl.mjs check",
@@ -34,6 +38,7 @@
     "css-loader": "7.1.5",
     "html-webpack-plugin": "5.6.8",
     "playwright": "1.64.1",
+    "prisma": "6.19.0",
     "style-loader": "4.0.0",
     "ts-loader": "9.6.2",
     "typescript": "5.9.3",
@@ -42,6 +47,7 @@
     "yaml": "2.9.1"
   },
   "dependencies": {
+    "@prisma/client": "6.19.0",
     "qiankun": "2.10.16",
     "react": "19.2.0",
     "react-dom": "19.2.0"

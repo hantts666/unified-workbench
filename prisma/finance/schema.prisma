@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../../.generated/finance"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+datasource db {
+  provider = "postgresql"
+  url = env("FINANCE_DATABASE_URL")
+}
+model LedgerBinding {
+  id String @id @default(cuid())
+  platformCompanyId String @unique
+  name String
+  abbreviation String
+  taxId String @default("")
+  siteName String
+  erpCompany String
+  apiCredential String @default("")
+  active Boolean @default(true)
+  lockedThrough String @default("")
+  provisionStatus String @default("READY")
+  version Int @default(1)
+  documents Document[]
+  projects Project[]
+  transactions BankTransaction[]
+  @@unique([siteName, erpCompany])
+}
+model Document {
+  id String @id @default(cuid())
+  tenantId String
+  tenant LedgerBinding @relation(fields:[tenantId], references:[id])
+  filename String
+  contentHash String
+  storagePath String
+  mimeType String
+  status String @default("PROCESSING")
+  suggestion Json?
+  error String?
+  erpName String?
+  invoiceNumber String?
+  processingVersion Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([tenantId, contentHash])
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId, status])
+}
+model Project {
+  id String @id @default(cuid())
+  tenantId String
+  tenant LedgerBinding @relation(fields:[tenantId], references:[id])
+  name String
+  customer String
+  manager String
+  contractCents Int
+  budgetCents Int
+  erpProject String?
+  createdAt DateTime @default(now())
+  @@index([tenantId])
+}
+model BankTransaction {
+  id String @id @default(cuid())
+  tenantId String
+  tenant LedgerBinding @relation(fields:[tenantId], references:[id])
+  sourceDocumentId String
+  fingerprint String
+  date String
+  counterparty String
+  amountCents Int
+  memo String
+  matchedErpName String?
+  @@unique([tenantId, fingerprint])
+  @@index([tenantId])
+}
+model Audit {
+  id String @id @default(cuid())
+  tenantId String
+  userId String
+  actorDisplayNameSnapshot String?
+  action String
+  resourceId String
+  detail Json
+  createdAt DateTime @default(now())
+  @@index([tenantId, createdAt])
+}
+model ProcessorConfig {
+  id String @id
+  enabled Boolean @default(true)
+  config Json
+}
