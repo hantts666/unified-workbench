@@ -1,0 +1,17 @@
+{
+  "executedAt": "2026-10-27T10:38:44.339Z",
+  "result": "passed",
+  "browser": "145.0.3800.97",
+  "checks": [
+    "real qiankun finance mount uses one portal layout and one company selector",
+    "child route supports back, forward and direct refresh",
+    "cancelling company switch preserves current company and unsaved editor",
+    "accepted switch closes old dialogs and renders only the new company",
+    "delayed real response from previous company cannot overwrite the active company",
+    "20 real mount/unmount cycles preserve one root, clean popups and portal styling",
+    "open finance dialog is contained in child root and removed on unmount"
+  ],
+  "pageErrors": [],
+  "cycles": 20,
+  "transport": "real platform and finance HTTP; delayed real response for fault injection"
+}
