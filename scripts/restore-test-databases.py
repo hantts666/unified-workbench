@@ -1,5 +1,5 @@
 """Restore snapshots into ephemeral, disconnected PostgreSQL containers only."""
-import argparse,hashlib,json,os,secrets,subprocess,time
+import argparse,hashlib,json,os,re,secrets,subprocess,time
 from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('--backup',required=True);p.add_argument('--report',required=True);a=p.parse_args();backup=Path(a.backup).resolve();manifest=json.loads((backup/'manifest.json').read_text());checks=[]
 def docker(*args,**kwargs):return subprocess.run(['sudo','docker',*args],check=True,**kwargs)
@@ -46,8 +46,11 @@ if 'redisKeys' in manifest:
             probe=subprocess.run(['sudo','docker','exec',container,'redis-cli','DBSIZE'],capture_output=True,text=True)
             if probe.returncode==0 and probe.stdout.strip().isdigit():break
             time.sleep(1)
-        assert int(probe.stdout.strip())==manifest['redisKeys'],'Restored Redis key count mismatch'
-        checks.append('Redis snapshot restored in a disconnected container with matching key count')
+        validation=docker('exec',container,'redis-check-rdb','/snapshot/redis.rdb',capture_output=True,text=True).stdout
+        stored=int(re.search(r'(\d+) keys read',validation).group(1));expired=int(re.search(r'(\d+) already expired',validation).group(1))
+        assert 'Checksum OK' in validation and stored==manifest['redisKeys'],'Redis snapshot validation failed'
+        assert int(probe.stdout.strip())==stored-expired,'Restored Redis live key count mismatch'
+        checks.append('Redis snapshot checksum and persisted key count match; restored live keys exclude expired temporary markers')
     finally:
         if created:subprocess.run(['sudo','docker','stop',container],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 report={'executedAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'result':'passed','checks':checks,'tables':sum(len(t) for t in manifest['databases'].values())}
