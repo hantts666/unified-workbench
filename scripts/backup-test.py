@@ -23,6 +23,7 @@ try:
         with (out/(kind+'.dump')).open('wb') as stream:docker('exec','unified-workbench-'+kind+'-postgres-1','pg_dump','-U',kind+'_owner','-d',kind,'-Fc','--no-owner','--no-acl',stdout=stream)
     docker('run','--rm','--network','none','-v','unified-workbench_finance-uploads:/uploads:ro','-v',str(out)+':/backup','node:24-bookworm-slim','tar','-cf','/backup/uploads.tar','-C','/uploads','.')
     docker('exec','unified-workbench-finance-redis-1','redis-cli','SAVE',stdout=subprocess.DEVNULL)
+    report['redisKeys']=int(docker('exec','unified-workbench-finance-redis-1','redis-cli','DBSIZE',capture_output=True,text=True).stdout.strip())
     docker('cp','unified-workbench-finance-redis-1:/data/dump.rdb',str(out/'redis.rdb'),stdout=subprocess.DEVNULL)
     (out/'environment.env').write_bytes((root/'.env').read_bytes())
     (out/'app-revision').write_text(((root/'app-current').resolve()/'.source-revision').read_text())
