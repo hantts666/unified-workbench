@@ -1,0 +1,8 @@
+{
+  "acceptanceId": "AC27",
+  "result": "passed",
+  "tests": 6,
+  "checks": ["JSON Schema compatibility", "credentials and cross-application permissions rejected", "immutable snapshots", "cancelled company switch", "subscription disposal", "concurrent switch takes latest", "abort and discard stale responses", "unmount cleanup", "401 delegated to platform"],
+  "commands": ["npm run typecheck", "node --test tests/platform-sdk.test.mjs"],
+  "scope": "SDK and interface contract verification; not a deployed business service acceptance"
+}

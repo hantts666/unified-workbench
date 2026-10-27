@@ -1,0 +1,16 @@
+{
+  "taskId": "T01",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "2862f0110d4f7a5c9a512a4800c3e37d0141a7ee",
+  "executedAt": "2026-10-27T08:36:53.386Z",
+  "checks": [
+    {
+      "acceptanceId": "AC26",
+      "status": "passed",
+      "command": "npm run typecheck && npm run build:poc && npm run test:poc",
+      "exitCode": 0,
+      "report": "evidence/reports/T01-browser.json",
+      "reportSha256": "11869a1760f0dcf40a8adb71266c3153c01d370a25d513d770132c5f8d395e52"
+    }
+  ]
+}
