@@ -24,9 +24,10 @@ for suffix in ['a','b']:
         run(compose+['exec','-T','backend','bench','--site',target,'disable-scheduler'],suffix+'-scheduler')
         marker.write_text(json.dumps({'site':target,'restored':True}))
     # Compare voucher and GL records through each site's own connection, without cross-database SQL.
-    code="""import frappe,json,hashlib
+    code="""import frappe,json,hashlib,os
+os.chdir('/home/frappe/frappe-bench/sites')
 def summary(site):
- frappe.init(site=site,sites_path='sites');frappe.connect()
+ frappe.init(site=site,sites_path='.');frappe.connect()
  result={}
  for table in ['Journal Entry','Journal Entry Account','GL Entry','Account','Project']:
   rows=frappe.get_all(table,fields=['*'],order_by='name',limit_page_length=0)

@@ -41,7 +41,7 @@ checks.append('every restored attachment matches the SHA-256 in the restored fin
 if 'redisKeys' in manifest:
     container='unified-restore-redis-'+secrets.token_hex(4);created=False
     try:
-        docker('run','-d','--rm','--name',container,'--network','none','-v',str(backup)+':/snapshot:ro','redis:8.6-alpine','redis-server','--save','','--appendonly','no','--dir','/snapshot','--dbfilename','redis.rdb',stdout=subprocess.DEVNULL);created=True
+        docker('run','-d','--rm','--name',container,'--network','none','--user','0:0','--entrypoint','redis-server','-v',str(backup/'redis.rdb')+':/snapshot/redis.rdb:ro','redis:8.6-alpine','--save','','--appendonly','no','--dir','/snapshot','--dbfilename','redis.rdb',stdout=subprocess.DEVNULL);created=True
         for i in range(30):
             probe=subprocess.run(['sudo','docker','exec',container,'redis-cli','DBSIZE'],capture_output=True,text=True)
             if probe.returncode==0 and probe.stdout.strip().isdigit():break
@@ -49,6 +49,6 @@ if 'redisKeys' in manifest:
         assert int(probe.stdout.strip())==manifest['redisKeys'],'Restored Redis key count mismatch'
         checks.append('Redis snapshot restored in a disconnected container with matching key count')
     finally:
-        if created:docker('stop',container,stdout=subprocess.DEVNULL)
+        if created:subprocess.run(['sudo','docker','stop',container],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 report={'executedAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'result':'passed','checks':checks,'tables':sum(len(t) for t in manifest['databases'].values())}
 Path(a.report).write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
