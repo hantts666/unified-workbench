@@ -1,0 +1,96 @@
+{
+  "executedAt": "2026-10-27T11:13:26.296Z",
+  "result": "passed",
+  "transport": "deployed Docker API and worker",
+  "erp": "two restored isolated ERPNext sites",
+  "checks": [
+    {
+      "name": "无登录无法读取业务数据",
+      "passed": true
+    },
+    {
+      "name": "跨站写请求拒绝",
+      "passed": true
+    },
+    {
+      "name": "公司隔离：只列出获授权公司",
+      "passed": true
+    },
+    {
+      "name": "公司隔离：越权读取和写入均拒绝",
+      "passed": true
+    },
+    {
+      "name": "审核更正 → ERP 草稿 → 正式提交和重试幂等",
+      "passed": true
+    },
+    {
+      "name": "公司隔离：其他公司的原件不可读取",
+      "passed": true
+    },
+    {
+      "name": "不平衡分录与锁定期间拒绝创建草稿",
+      "passed": true
+    },
+    {
+      "name": "不同文件登记相同发票号码拒绝重复",
+      "passed": true
+    },
+    {
+      "name": "ERP 已写入但平台响应中断后可安全恢复",
+      "passed": true
+    },
+    {
+      "name": "上传去重、后台解析与银行金额匹配",
+      "passed": true
+    },
+    {
+      "name": "PDF 上传、后台文本提取与人工审核状态",
+      "passed": true
+    },
+    {
+      "name": "项目权责利润与现金视图区分",
+      "passed": true
+    },
+    {
+      "name": "ERPNext 原生报表可读取：balance",
+      "passed": true
+    },
+    {
+      "name": "ERPNext 原生报表可读取：profit",
+      "passed": true
+    },
+    {
+      "name": "ERPNext 原生报表可读取：ledger",
+      "passed": true
+    },
+    {
+      "name": "ERPNext 原生报表可读取：receivable",
+      "passed": true
+    },
+    {
+      "name": "ERPNext 原生报表可读取：payable",
+      "passed": true
+    },
+    {
+      "name": "平台利润表与 ERPNext 原生结果逐项一致",
+      "passed": true
+    },
+    {
+      "name": "两个真实 Site 的科目与总账互相隔离",
+      "passed": true
+    },
+    {
+      "name": "审计记录包含审核修改与正式提交",
+      "passed": true
+    },
+    {
+      "name": "云端模型默认关闭且无密钥回传",
+      "passed": true
+    },
+    {
+      "name": "新增凭证总账借贷平衡且历史凭证保留",
+      "passed": true
+    }
+  ]
+}
