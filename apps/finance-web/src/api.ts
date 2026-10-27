@@ -6,7 +6,10 @@ export function createFinanceClient(platform: PlatformBridge) {
     companyId = platform.getContext().companyId;
   let ledgerId = "",
     disposed = false;
-  const provisioningKey = crypto.randomUUID();
+  // getRandomValues is also available on the IP-based HTTP test entry.
+  // Keep a cryptographically random key stable for this mounted instance.
+  const provisioningKey = Array.from(crypto.getRandomValues(new Uint8Array(16)),
+    value => value.toString(16).padStart(2, '0')).join('');
   const current = () => {
     if (disposed || companyId !== platform.getContext().companyId)
       throw new DOMException("公司已改变或应用已关闭", "AbortError");
