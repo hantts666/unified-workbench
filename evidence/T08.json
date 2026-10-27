@@ -1,0 +1,56 @@
+{
+  "taskId": "T08",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "640b1264f24d730caeed7dd3a3e6b13f16510a61",
+  "executedAt": "2026-10-27T10:15:01.714Z",
+  "checks": [
+    {
+      "acceptanceId": "AC04",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run test:finance-rules; npm run test:finance-auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T08-finance-authorization.json",
+      "reportSha256": "7dc9f62d14dde2cfe2fdb0643be0b6761238a63f73bc054918e6a180bbea914f"
+    },
+    {
+      "acceptanceId": "AC05",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run test:finance-rules; npm run test:finance-auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T08-finance-authorization.json",
+      "reportSha256": "7dc9f62d14dde2cfe2fdb0643be0b6761238a63f73bc054918e6a180bbea914f"
+    },
+    {
+      "acceptanceId": "AC06",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run test:finance-rules; npm run test:finance-auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T08-finance-authorization.json",
+      "reportSha256": "7dc9f62d14dde2cfe2fdb0643be0b6761238a63f73bc054918e6a180bbea914f"
+    },
+    {
+      "acceptanceId": "AC16",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run test:finance-rules; npm run test:finance-auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T08-finance-authorization.json",
+      "reportSha256": "7dc9f62d14dde2cfe2fdb0643be0b6761238a63f73bc054918e6a180bbea914f"
+    },
+    {
+      "acceptanceId": "AC17",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run test:finance-rules; npm run test:finance-auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T08-finance-authorization.json",
+      "reportSha256": "7dc9f62d14dde2cfe2fdb0643be0b6761238a63f73bc054918e6a180bbea914f"
+    },
+    {
+      "acceptanceId": "AC25",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run test:finance-rules; npm run test:finance-auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T08-finance-authorization.json",
+      "reportSha256": "7dc9f62d14dde2cfe2fdb0643be0b6761238a63f73bc054918e6a180bbea914f"
+    }
+  ]
+}
