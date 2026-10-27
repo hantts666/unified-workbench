@@ -1,0 +1,21 @@
+{
+  "executedAt": "2026-10-27T08:35:30.522Z",
+  "browser": "145.0.3800.97",
+  "react": "19.2.0",
+  "qiankun": "2.10.16",
+  "webpack": "5.112.2",
+  "checks": [
+    "direct-route",
+    "refresh",
+    "dynamic-chunk",
+    "20-mount-unmount-cycles",
+    "back-navigation"
+  ],
+  "counters": {
+    "mount": 21,
+    "unmount": 20,
+    "bootstrap": 1
+  },
+  "pageErrors": [],
+  "failedResources": []
+}

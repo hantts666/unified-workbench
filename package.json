@@ -8,6 +8,9 @@
     "node": ">=24 <25"
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build:poc": "node scripts/build-poc.mjs",
+    "test:poc": "node tests/poc-browser.mjs",
     "spec:check": "node scripts/specctl.mjs check",
     "spec:status": "node scripts/specctl.mjs status",
     "spec:next": "node scripts/specctl.mjs next",
@@ -23,8 +26,24 @@
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "13.1.0",
+    "@types/node": "24.10.0",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
+    "css-loader": "7.1.5",
+    "html-webpack-plugin": "5.6.8",
+    "playwright": "1.64.1",
+    "style-loader": "4.0.0",
+    "ts-loader": "9.6.2",
+    "typescript": "5.9.3",
+    "webpack": "5.112.2",
+    "webpack-cli": "7.2.3",
     "yaml": "2.9.1"
+  },
+  "dependencies": {
+    "qiankun": "2.10.16",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   }
 }

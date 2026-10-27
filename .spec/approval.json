@@ -1,7 +1,7 @@
 {
-  "status": "pending_review",
-  "reviewer": null,
-  "approvedAt": null,
-  "evidence": null,
-  "scopeDigest": null
+  "status": "approved",
+  "reviewer": "project-owner",
+  "approvedAt": "2026-10-27T08:28:28.110Z",
+  "evidence": "docs/reviews/2026-10-27-approval.md",
+  "scopeDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b"
 }

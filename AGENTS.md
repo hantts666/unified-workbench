@@ -6,7 +6,7 @@
 
 1. 阅读 `docs/REVIEW.md`，执行 `npm run spec:status` 和 `npm run spec:check`。
 2. 业务开发使用 `.agents/skills/unified-workbench-spec/SKILL.md`。需求与验收以 `specs/001-unified-platform/spec.json` 为结构化来源，技术决策见同目录 `plan.md`。
-3. 当前用户授权仅包括项目准备和发布公共仓库，用户明确要求审完再实现。可以修订规格、脚本和工作流；业务任务启动须有后续明确的人类批准。不要自行生成批准证据。
+3. 用户已在 `docs/reviews/2026-10-27-approval.md` 明确批准开始实施，并要求定期同步 GitHub 与服务器。按已批准任务推进，不要再次询问是否开工；审批记录必须来自真实用户指令。
 4. 获批后按 `spec:next` 选择依赖满足的任务，用 `spec:start -- Txx` 登记。任务定义与执行状态分离；需求变更后重核审批指纹。
 
 ## 执行边界

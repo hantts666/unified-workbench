@@ -1,6 +1,6 @@
 # 评审入口
 
-状态：**pending_review / 等待用户评审**。本次交付仅为前期准备，全部业务任务保持 `pending`。
+状态：**用户已批准实施**，见 [批准记录](reviews/2026-10-27-approval.md)。任务进度以 `npm run spec:status` 为准。
 
 ## 建议批准的 V0.2 范围
 
