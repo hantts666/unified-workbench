@@ -1,0 +1,32 @@
+{
+  "taskId": "T14",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "7d7dbdd5fa44ae451e8752d785817b9a456eb439",
+  "executedAt": "2026-10-27T11:52:00.877Z",
+  "checks": [
+    {
+      "acceptanceId": "AC19",
+      "status": "passed",
+      "command": "python3 scripts/check-clean-install.py --root <private-clean-stack> --report <private-report>; DEPLOYED_TEST_BASE=<isolated-test> TEST_LOGIN_FILE=<private-file> node tests/delivery-browser.integration.mjs; T13 recovery evidence and delivery documentation review",
+      "exitCode": 0,
+      "report": "evidence/reports/T14-delivery.json",
+      "reportSha256": "67cc0b3d68fbf0174373319bc7e1ca02106a548ca3a96c64d091c0f67609e030"
+    },
+    {
+      "acceptanceId": "AC20",
+      "status": "passed",
+      "command": "python3 scripts/check-clean-install.py --root <private-clean-stack> --report <private-report>; DEPLOYED_TEST_BASE=<isolated-test> TEST_LOGIN_FILE=<private-file> node tests/delivery-browser.integration.mjs; T13 recovery evidence and delivery documentation review",
+      "exitCode": 0,
+      "report": "evidence/reports/T14-delivery.json",
+      "reportSha256": "67cc0b3d68fbf0174373319bc7e1ca02106a548ca3a96c64d091c0f67609e030"
+    },
+    {
+      "acceptanceId": "AC28",
+      "status": "passed",
+      "command": "python3 scripts/check-clean-install.py --root <private-clean-stack> --report <private-report>; DEPLOYED_TEST_BASE=<isolated-test> TEST_LOGIN_FILE=<private-file> node tests/delivery-browser.integration.mjs; T13 recovery evidence and delivery documentation review",
+      "exitCode": 0,
+      "report": "evidence/reports/T14-delivery.json",
+      "reportSha256": "67cc0b3d68fbf0174373319bc7e1ca02106a548ca3a96c64d091c0f67609e030"
+    }
+  ]
+}
