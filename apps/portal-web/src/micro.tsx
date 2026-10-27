@@ -1,0 +1,143 @@
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import { Alert, Button, Empty, Spin } from "antd";
+import { loadMicroApp, type MicroApp } from "qiankun";
+import { createContextStore } from "../../../packages/platform-sdk/index.js";
+import type { UserSummary } from "../../../packages/contracts/index.js";
+import { api, navigate } from "./api.js";
+export interface MicroHandle {
+  changeCompany: (id: string) => Promise<boolean>;
+}
+export const MicroWorkspace = forwardRef<
+  MicroHandle,
+  { application: any; companyId: string; user: UserSummary }
+>(({ application, companyId, user }, ref) => {
+  const container = useRef<HTMLDivElement>(null),
+    store = useRef<ReturnType<typeof createContextStore> | null>(null),
+    instance = useRef<MicroApp | null>(null),
+    queue = useRef(Promise.resolve());
+  const [error, setError] = useState(""),
+    [loading, setLoading] = useState(true),
+    [empty, setEmpty] = useState(false),
+    [retry, setRetry] = useState(0);
+  let switchVersion = useRef(0);
+  useImperativeHandle(
+    ref,
+    () => ({
+      async changeCompany(id) {
+        const ticket = ++switchVersion.current,
+          currentStore = store.current;
+        if (!currentStore) return false;
+        const permissions = await api(
+          `/permissions?applicationCode=${encodeURIComponent(application.code)}&companyId=${encodeURIComponent(id)}`,
+        );
+        if (ticket !== switchVersion.current || currentStore !== store.current)
+          return false;
+        return currentStore.change({
+          ...currentStore.getContext(),
+          companyId: id,
+          permissionCodes: permissions,
+        });
+      },
+    }),
+    [application.code],
+  );
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    setEmpty(false);
+    queue.current = queue.current
+      .catch(() => {})
+      .then(async () => {
+        if (cancelled) return;
+        const permissions = await api(
+          `/permissions?applicationCode=${encodeURIComponent(application.code)}&companyId=${encodeURIComponent(companyId)}`,
+        );
+        if (cancelled) return;
+        const context = createContextStore({
+          applicationCode: application.code,
+          basePath: application.activeRule,
+          companyId,
+          contextVersion: 0,
+          user,
+          permissionCodes: permissions,
+          theme: "light",
+        });
+        store.current = context;
+        if (!permissions.length) {
+          setEmpty(true);
+          setLoading(false);
+          return;
+        }
+        const platform = {
+          getContext: context.getContext,
+          subscribe: context.subscribe,
+          beforeCompanyChange: context.beforeCompanyChange,
+          navigate,
+          sessionExpired: () =>
+            window.dispatchEvent(new Event("platform-session-expired")),
+        };
+        const app = loadMicroApp(
+          {
+            name: application.code,
+            entry: application.entry,
+            container: container.current!,
+            props: { platform },
+          },
+          { sandbox: { experimentalStyleIsolation: true }, singular: true },
+        );
+        instance.current = app;
+        await app.mountPromise;
+        if (!cancelled) setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError("应用暂时无法打开，请重试。你仍可使用平台和其他应用。");
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+      switchVersion.current++;
+      const previousStore = store.current;
+      store.current = null;
+      queue.current = queue.current
+        .catch(() => {})
+        .then(async () => {
+          const mounted = instance.current;
+          instance.current = null;
+          if (mounted) await mounted.unmount();
+          previousStore?.dispose();
+        });
+    };
+  }, [application.code, retry, user.id, companyId]);
+  return (
+    <div className="portal-micro">
+      {loading && (
+        <div className="portal-loading">
+          <Spin tip="正在打开应用…" spinning>
+            <div />
+          </Spin>
+        </div>
+      )}
+      {error && (
+        <Alert
+          type="error"
+          showIcon
+          message={error}
+          action={
+            <Button onClick={() => setRetry((v) => v + 1)}>重新打开</Button>
+          }
+        />
+      )}
+      {empty && <Empty description="你在当前公司没有此应用的使用权限" />}
+      <div ref={container} data-testid="micro-container" />
+    </div>
+  );
+});

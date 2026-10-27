@@ -9,7 +9,8 @@
       "deepmerge-ts": "8.0.0",
       "effect": "3.20.0"
     },
-    "multer": "2.5.0"
+    "multer": "2.5.0",
+    "exceljs": {"uuid":"11.1.1"}
   },
   "engines": {
     "node": ">=24 <25"
@@ -22,7 +23,14 @@
     "start:platform": "node --import tsx apps/platform-api/src/main.ts",
     "test:auth": "node --import tsx tests/platform-auth.integration.mjs",
     "test:permissions": "node --import tsx tests/platform-permissions.integration.mjs",
+    "test:portal": "node --import tsx tests/portal-browser.integration.mjs",
+    "test:finance-rules": "node --import tsx --test tests/finance-rules.test.ts",
+    "start:finance": "node --import tsx apps/finance-api/src/main.ts",
+    "start:worker": "node --import tsx apps/finance-worker/src/main.ts",
     "build:poc": "node scripts/build-poc.mjs",
+    "build:portal": "node scripts/build-web.mjs portal",
+    "build:finance": "node scripts/build-web.mjs finance",
+    "build:sample": "node scripts/build-web.mjs sample",
     "test:poc": "node tests/poc-browser.mjs",
     "spec:check": "node scripts/specctl.mjs check",
     "spec:status": "node scripts/specctl.mjs status",
@@ -49,6 +57,7 @@
     "css-loader": "7.1.5",
     "html-webpack-plugin": "5.6.8",
     "playwright": "1.64.1",
+    "prettier": "3.6.2",
     "prisma": "6.19.0",
     "style-loader": "4.0.0",
     "ts-loader": "9.6.2",
@@ -64,10 +73,14 @@
     "@nestjs/platform-express": "11.2.8",
     "@prisma/client": "6.19.0",
     "antd": "5.29.3",
+    "bullmq": "5.63.0",
     "cookie-parser": "1.4.7",
+    "csv-parse": "7.0.3",
     "dayjs": "1.11.19",
+    "exceljs": "4.4.0",
     "express": "5.3.0",
     "helmet": "8.3.0",
+    "pdf-parse": "2.4.5",
     "qiankun": "2.10.16",
     "react": "19.2.0",
     "react-dom": "19.2.0",

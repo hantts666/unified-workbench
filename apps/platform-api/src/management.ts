@@ -95,6 +95,13 @@ export function registerManagement(router:Router){
     },{isolationLevel:'Serializable'});res.json(role);
   }));
   router.get('/users/:id/access',requirePermission('platform:authorization:manage'),route(async(req,res)=>res.json({memberships:await db.userCompany.findMany({where:{userId:req.params.id},include:{company:true}}),assignments:await db.roleAssignment.findMany({where:{userId:req.params.id},include:{role:true}})})));
+  router.get('/authorization-options',requirePermission('platform:authorization:manage'),route(async(_req,res)=>{
+    const [users,companies,roles]=await Promise.all([
+      db.user.findMany({select:{id:true,account:true,displayName:true},orderBy:{displayName:'asc'},take:500}),
+      db.company.findMany({where:{active:true},select:{id:true,name:true},orderBy:{name:'asc'},take:500}),
+      db.role.findMany({where:{active:true,application:{active:true}},select:{id:true,name:true,applicationId:true,scopeType:true},orderBy:{name:'asc'}}),
+    ]);res.json({users,companies,roles});
+  }));
   router.put('/users/:id/companies',requirePermission('platform:authorization:manage'),route(async(req,res)=>{
     const input=z.object({companyIds:z.array(z.string().min(1)).max(100)}).strict().parse(req.body);
     if(new Set(input.companyIds).size!==input.companyIds.length)throw new ApiFailure(400,'DUPLICATE_COMPANY','公司不能重复');

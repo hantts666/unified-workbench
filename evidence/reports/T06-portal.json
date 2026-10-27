@@ -1,0 +1,18 @@
+{
+  "executedAt": "2026-10-27T09:54:12.345Z",
+  "result": "passed",
+  "browser": "145.0.3800.97",
+  "database": "real PostgreSQL",
+  "api": "real NestJS HTTP",
+  "checks": [
+    "unified login and layout; administrator has no implicit finance entry",
+    "create user with real HTTP and database persistence",
+    "create company through platform UI",
+    "create application-scoped role through platform UI",
+    "grant company membership and application role through platform UI",
+    "reader sees permitted application and no platform management menus",
+    "direct URL and direct API access both reject unauthorized reader",
+    "direct route refresh preserves authorization and has no browser errors"
+  ],
+  "pageErrors": []
+}
