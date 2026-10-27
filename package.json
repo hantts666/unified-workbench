@@ -10,7 +10,9 @@
       "effect": "3.20.0"
     },
     "multer": "2.5.0",
-    "exceljs": {"uuid":"11.1.1"}
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
   },
   "engines": {
     "node": ">=24 <25"
@@ -24,6 +26,8 @@
     "test:auth": "node --import tsx tests/platform-auth.integration.mjs",
     "test:permissions": "node --import tsx tests/platform-permissions.integration.mjs",
     "test:portal": "node --import tsx tests/portal-browser.integration.mjs",
+    "test:finance-auth": "node --import tsx tests/finance-authorization.integration.mjs",
+    "test:finance-browser": "node --import tsx tests/finance-browser.integration.mjs",
     "test:finance-rules": "node --import tsx --test tests/finance-rules.test.ts",
     "start:finance": "node --import tsx apps/finance-api/src/main.ts",
     "start:worker": "node --import tsx apps/finance-worker/src/main.ts",
@@ -67,6 +71,7 @@
     "yaml": "2.9.1"
   },
   "dependencies": {
+    "@ant-design/cssinjs": "1.24.0",
     "@ant-design/icons": "6.1.0",
     "@nestjs/common": "11.2.8",
     "@nestjs/core": "11.2.8",

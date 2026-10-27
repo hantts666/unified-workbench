@@ -39,6 +39,7 @@ export function registerIntrospection(router:Router){
     const session=await findSession(input.sessionToken);
     if(!session)return res.json({active:false,allowed:false});
     const permissions=await effectivePermissions(session.userId,input.applicationCode,input.companyId);
-    res.json({active:true,allowed:permissions.includes(input.permissionCode),subjectId:session.userId,companyId:input.companyId,applicationCode:input.applicationCode,authzVersion:session.user.authzVersion,sessionExpiresAt:session.expiresAt.toISOString()});
+    const allowed=input.permissionCode==='finance:application:access'?permissions.length>0:permissions.includes(input.permissionCode);
+    res.json({active:true,allowed,subjectId:session.userId,companyId:input.companyId,applicationCode:input.applicationCode,authzVersion:session.user.authzVersion,sessionExpiresAt:session.expiresAt.toISOString()});
   }));
 }

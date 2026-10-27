@@ -1,0 +1,77 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {privateConfig,databaseUrl} from '../scripts/lib/private-config.mjs';
+import {Client} from '../scripts/lib/acceptance-actions.mjs';
+import {createWebServer} from '../scripts/lib/web-server.mjs';
+const config=privateConfig(),erpSites=JSON.parse(fs.readFileSync('.local/erp-test.json','utf8'));
+const prefix='qa-finance-'+randomUUID(),password=randomUUID()+'finance';
+const uploadRoot=path.resolve('.local','uploads-'+prefix);
+Object.assign(process.env,{PLATFORM_DATABASE_URL:databaseUrl('platform'),FINANCE_DATABASE_URL:databaseUrl('finance'),INTERNAL_SERVICE_SECRET:config.INTERNAL_SERVICE_SECRET,MASTER_KEY:config.MASTER_KEY,COOKIE_SECURE:'false',REDIS_URL:'redis://127.0.0.1:26379',ERP_ORIGIN:'http://127.0.0.1:28180',ERP_ALLOWED_SITES:erpSites.map(s=>s.siteName).join(','),INTERNAL_AUTH_TIMEOUT_MS:'30000',UPLOAD_DIR:uploadRoot});
+const {db:platformDb}=await import('../apps/platform-api/src/db.ts');
+const {db:financeDb,encrypt}=await import('../apps/finance-api/src/db.ts');
+const {passwordHash}=await import('../apps/platform-api/src/security.ts');
+const {seedDefinitions}=await import('../apps/platform-api/src/seed.ts');
+const {createPlatformApp}=await import('../apps/platform-api/src/main.ts');
+const {createFinanceApp}=await import('../apps/finance-api/src/main.ts');
+const {queue}=await import('../apps/finance-api/src/queue.ts');
+const {ERPNext}=await import('../packages/erpnext-adapter/index.ts');
+const checks=[],users=[],companies=[];let platform,finance,server;
+const record=name=>{checks.push(name);console.log('PASS',name);};
+try{
+  await seedDefinitions();
+  for(const suffix of ['A','B','unprovisioned'])companies.push(await platformDb.company.create({data:{name:prefix+' '+suffix,abbreviation:suffix}}));
+  for(const [name,roleId] of [['admin','platform-admin'],['reader','finance-reader'],['manager','finance-manager']]){
+    const u=await platformDb.user.create({data:{account:prefix+'-'+name,displayName:'虚构 '+name,passwordHash:await passwordHash(password)}});users.push(u);
+    for(const c of companies)await platformDb.userCompany.create({data:{userId:u.id,companyId:c.id}});
+    if(name==='admin')await platformDb.roleAssignment.create({data:{userId:u.id,roleId,applicationId:'platform',scopeType:'instance'}});
+    else for(const c of name==='reader'?[companies[0]]:companies)await platformDb.roleAssignment.create({data:{userId:u.id,roleId,applicationId:'finance',scopeType:'company',companyId:c.id}});
+  }
+  platform=await createPlatformApp();await platform.listen(0,'127.0.0.1');process.env.PLATFORM_INTERNAL_ORIGIN=await platform.getUrl();finance=await createFinanceApp();await finance.listen(0,'127.0.0.1');
+  server=createWebServer({platformOrigin:await platform.getUrl(),financeOrigin:await finance.getUrl()});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`http://127.0.0.1:${server.address().port}`;
+  const customFetch=(url,options)=>fetch(url,{...options,signal:AbortSignal.timeout(45000)});
+  const admin=new Client(base,customFetch),reader=new Client(base,customFetch),manager=new Client(base,customFetch);
+  await admin.login(users[0].account,password);await reader.login(users[1].account,password);await manager.login(users[2].account,password);
+  const route=(c,suffix)=>`/api/finance/companies/${c.id}/${suffix}`;
+  assert.equal((await manager.request(route(companies[2],'context'))).data.provisionStatus,'UNPROVISIONED');
+  assert.equal((await manager.request(route(companies[2],'manual-document'),{method:'POST',body:{}})).status,409);record('unprovisioned company status is visible and refuses accounting writes');
+  const site=erpSites[0],key=randomUUID();
+  const provisioning={name:site.company,abbreviation:site.abbreviation,taxId:'',siteName:site.siteName,erpCompany:site.company,apiKey:site.apiKey,apiSecret:site.apiSecret};
+  const provision=async(body)=>{const r=await fetch(base+route(companies[0],'ledger/provision'),{method:'POST',headers:{Cookie:manager.cookie,Origin:base,'Content-Type':'application/json','Idempotency-Key':key},body:JSON.stringify(body),signal:AbortSignal.timeout(60000)});return {status:r.status,data:await r.json()};};
+  assert.equal((await provision({...provisioning,apiSecret:'invalid-test-credential'})).status,502);assert.equal((await manager.request(route(companies[0],'ledger'))).data.provisionStatus,'FAILED');
+  assert.equal((await provision(provisioning)).status,201);assert.equal((await provision(provisioning)).status,200);assert.equal((await provision({...provisioning,name:'different request'})).status,409);
+  assert.equal(await financeDb.ledgerBinding.count({where:{platformCompanyId:companies[0].id}}),1);record('real ERP verification fails safely, retries with same key, and prevents duplicate bindings');
+  const ledgerA=await financeDb.ledgerBinding.findUniqueOrThrow({where:{platformCompanyId:companies[0].id}}),other=erpSites[1];
+  const ledgerB=await financeDb.ledgerBinding.create({data:{platformCompanyId:companies[1].id,name:other.company,abbreviation:other.abbreviation,siteName:other.siteName,erpCompany:other.company,apiCredential:encrypt(other.apiKey+':'+other.apiSecret)}});
+  const docA=await financeDb.document.create({data:{tenantId:ledgerA.id,filename:'虚构验收单据.json',contentHash:randomUUID(),storagePath:path.join(uploadRoot,'fixture-a.json'),mimeType:'application/json',status:'DRAFT'}});
+  const docB=await financeDb.document.create({data:{tenantId:ledgerB.id,filename:'虚构验收单据.json',contentHash:randomUUID(),storagePath:path.join(uploadRoot,'fixture-b.json'),mimeType:'application/json',status:'REVIEW'}});
+  const counts=async()=>({documents:await financeDb.document.count({where:{tenantId:{in:[ledgerA.id,ledgerB.id]}}}),audits:await financeDb.audit.count({where:{tenantId:{in:[ledgerA.id,ledgerB.id]}}}),journalsA:(await new ERPNext(ledgerA).journals()).length,journalsB:(await new ERPNext(ledgerB).journals()).length});
+  const before=await counts();
+  assert.equal((await new Client(base).request(route(companies[0],'documents'))).status,401);
+  assert.equal((await admin.request(route(companies[0],'documents'))).status,403);
+  assert.equal((await reader.request(route(companies[0],`documents/${docA.id}/submit`),{method:'POST',body:{confirmation:'确认提交正式账务'}})).status,403);
+  assert.equal((await reader.request(route(companies[1],'documents'))).status,403);
+  assert.equal((await reader.request(route(companies[0],`documents/${docB.id}`))).status,404);record('real gateway enforces anonymous, admin-only, read-only, company and resource boundaries');
+  assert.equal((await reader.request(route(companies[0],'documents'))).status,200);
+  const list=(await reader.request(route(companies[0],'documents'))).data;assert.ok(list.some(d=>d.id===docA.id));assert.ok(!list.some(d=>d.id===docB.id));record('authorized read resolves platform company to its own finance ledger');
+  const origin=process.env.PLATFORM_INTERNAL_ORIGIN;process.env.PLATFORM_INTERNAL_ORIGIN='http://127.0.0.1:1';
+  assert.equal((await manager.request(route(companies[0],`documents/${docA.id}/submit`),{method:'POST',body:{confirmation:'确认提交正式账务'}})).status,503);process.env.PLATFORM_INTERNAL_ORIGIN=origin;
+  assert.deepEqual(await counts(),before);record('authorization outage fails closed; real finance records and ERP voucher counts unchanged');
+  assert.equal((await manager.request('/internal/auth/introspect',{method:'POST',body:{}})).status,404);
+  const noService=await fetch(origin+'/internal/auth/introspect',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});assert.equal(noService.status,401);record('gateway hides internal authentication; direct service requires its credential');
+  assert.equal((await manager.request(route(companies[0],'manual-document'),{method:'POST',body:{},origin:'https://attacker.invalid'})).status,403);
+  const grant=await platformDb.roleAssignment.findFirstOrThrow({where:{userId:users[1].id,applicationId:'finance'}});
+  assert.equal((await admin.request('/api/platform/assignments/'+grant.id,{method:'DELETE'})).status,204);
+  assert.equal((await reader.request(route(companies[0],'documents'))).status,403);record('revocation is immediate through the complete platform-finance chain');
+  await manager.request('/api/platform/auth/logout',{method:'POST'});assert.equal((await manager.request(route(companies[0],`documents/${docA.id}/submit`),{method:'POST',body:{confirmation:'确认提交正式账务'}})).status,401);record('logged-out session cannot submit finance records');
+  assert.deepEqual(await counts(),before);assert.equal((await financeDb.document.findUniqueOrThrow({where:{id:docA.id}})).status,'DRAFT');record('all rejected writes preserve business and ERP state');
+  fs.mkdirSync('test-results',{recursive:true});fs.writeFileSync('test-results/T08-finance-authorization.json',JSON.stringify({executedAt:new Date().toISOString(),result:'passed',database:'two real PostgreSQL containers',erp:'two isolated real ERPNext test sites',checks},null,2)+'\n');
+}catch(error){console.error('T08 failed after',checks.length,'checks:',error.code??error.name,error.message?.slice(0,120));process.exitCode=1;}
+finally{
+  if(server)await new Promise(resolve=>server.close(resolve));await finance?.close();await platform?.close();await queue.close();
+  const ledgers=await financeDb.ledgerBinding.findMany({where:{platformCompanyId:{in:companies.map(c=>c.id)}},select:{id:true}}),ledgerIds=ledgers.map(l=>l.id),userIds=users.map(u=>u.id);
+  await financeDb.document.deleteMany({where:{tenantId:{in:ledgerIds}}});await financeDb.audit.deleteMany({where:{tenantId:{in:ledgerIds}}});await financeDb.ledgerBinding.deleteMany({where:{id:{in:ledgerIds}}});
+  await platformDb.roleAssignment.deleteMany({where:{userId:{in:userIds}}});await platformDb.userCompany.deleteMany({where:{userId:{in:userIds}}});await platformDb.session.deleteMany({where:{userId:{in:userIds}}});await platformDb.platformAudit.deleteMany({where:{actorId:{in:userIds}}});await platformDb.user.deleteMany({where:{id:{in:userIds}}});await platformDb.company.deleteMany({where:{id:{in:companies.map(c=>c.id)}}});await financeDb.$disconnect();await platformDb.$disconnect();
+  if(uploadRoot.startsWith(path.resolve('.local')+path.sep))fs.rmSync(uploadRoot,{recursive:true,force:true});
+}

@@ -1,0 +1,19 @@
+name: unified-workbench
+services:
+  finance-redis:
+    image: redis:8.6-alpine
+    command: [redis-server, --appendonly, 'yes']
+    restart: unless-stopped
+    networks: [finance-data]
+    volumes: [finance-redis-data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      retries: 12
+    mem_limit: 256m
+networks:
+  finance-data:
+    external: true
+    name: unified-workbench_finance-data
+volumes:
+  finance-redis-data:
