@@ -1,4 +1,4 @@
-name: unified-workbench
+name: ${STACK_NAME:-unified-workbench}
 services:
   platform-api:
     image: unified-workbench/platform-api:${APP_REVISION:?required}
@@ -116,12 +116,12 @@ services:
       sample-web: {condition: service_started}
     mem_limit: 128m
 networks:
-  platform-data: {external: true, name: unified-workbench_platform-data}
-  finance-data: {external: true, name: unified-workbench_finance-data}
+  platform-data: {external: true, name: '${STACK_NAME:-unified-workbench}_platform-data'}
+  finance-data: {external: true, name: '${STACK_NAME:-unified-workbench}_finance-data'}
   existing-erp: {external: true, name: '${ERP_NETWORK:-finance_default}'}
   services: {internal: true}
   erp-access: {internal: true}
   public: {}
   worker-egress: {}
 volumes:
-  finance-uploads:
+  finance-uploads: {external: true, name: '${STACK_NAME:-unified-workbench}_finance-uploads'}

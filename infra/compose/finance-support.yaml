@@ -1,4 +1,4 @@
-name: unified-workbench
+name: ${STACK_NAME:-unified-workbench}
 services:
   finance-redis:
     image: redis:8.6-alpine
@@ -14,6 +14,6 @@ services:
 networks:
   finance-data:
     external: true
-    name: unified-workbench_finance-data
+    name: ${STACK_NAME:-unified-workbench}_finance-data
 volumes:
   finance-redis-data:

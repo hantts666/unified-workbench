@@ -9,6 +9,10 @@ if not re.fullmatch('[a-f0-9]{40}',revision):raise SystemExit('Invalid source re
 os.umask(0o077)
 config=dict(line.split('=',1) for line in (root/'.env').read_text().splitlines() if '=' in line and not line.startswith('#'))
 runtime={k:config[k] for k in ['INTERNAL_SERVICE_SECRET','MASTER_KEY','BOOTSTRAP_ACCOUNT','BOOTSTRAP_PASSWORD','COOKIE_SECURE','WEB_PORT']}
+stack=config.get('STACK_NAME','unified-workbench')
+if not re.fullmatch('unified-[a-z0-9-]+',stack):raise SystemExit('Invalid isolated stack name')
+runtime['STACK_NAME']=stack
+runtime['WEB_BIND']=config.get('WEB_BIND','0.0.0.0')
 for kind in ['platform','finance']:
     password=urllib.parse.quote(config[kind.upper()+'_DB_APP_PASSWORD'],safe='')
     authority=f'{kind}_app'+':'+password+'@'+f'{kind}-postgres:5432'
@@ -19,10 +23,11 @@ compose=['sudo','docker','compose','--env-file',str(root/'.runtime.env'),'-f',st
 def run(args):subprocess.run(args,check=True,cwd=source)
 run(compose+['config','--quiet'])
 if not a.skip_build:run(compose+['build','--pull'])
-run(['sudo','docker','volume','create','unified-workbench_finance-uploads'])
+upload_volume=stack+'_finance-uploads'
+run(['sudo','docker','volume','create',upload_volume])
 uploads=root/'private/migration-20261027/uploads'
 if uploads.is_dir():
-    run(['sudo','docker','run','--rm','--network','none','-v','unified-workbench_finance-uploads:/target','-v',str(uploads)+':/source:ro','node:24-bookworm-slim','sh','-c','cp -an /source/. /target/ && chown -R 1000:1000 /target'])
+    run(['sudo','docker','run','--rm','--network','none','-v',upload_volume+':/target','-v',str(uploads)+':/source:ro','node:24-bookworm-slim','sh','-c','cp -an /source/. /target/ && chown -R 1000:1000 /target'])
 run(compose+['up','-d','--wait','--wait-timeout','180'])
 base='http://127.0.0.1:'+runtime['WEB_PORT']
 for service in ['platform','finance']:

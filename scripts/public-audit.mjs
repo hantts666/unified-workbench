@@ -9,7 +9,7 @@ export const SECRET_PATTERNS = [
   /(?:postgres(?:ql)?|mysql|mariadb):\/\/[^\s:@]+:[^\s@]+@/i,
   /\bAKIA[A-Z0-9]{16}\b/,
 ];
-const ignored = new Set(['.git','node_modules','.local','.generated','test-results','coverage','dist','playwright-report']);
+const ignored = new Set(['.git','node_modules','.local','.generated','test-results','coverage','dist','playwright-report','__pycache__']);
 
 export function audit(root) {
   const findings=[];

@@ -1,4 +1,4 @@
-name: unified-workbench
+name: ${STACK_NAME:-unified-workbench}
 services:
   platform-postgres:
     image: postgres:18.6
