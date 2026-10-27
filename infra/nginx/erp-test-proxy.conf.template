@@ -1,0 +1,22 @@
+map $http_x_frappe_site_name $allowed_site {
+  default 0;
+  unified-a.localhost 1;
+  unified-b.localhost 1;
+  unified-migration-a.localhost 1;
+  unified-migration-b.localhost 1;
+}
+server {
+  listen 8080;
+  server_tokens off;
+  access_log off;
+  resolver 127.0.0.11 valid=10s ipv6=off;
+  location /api/ {
+    if ($allowed_site = 0) { return 403; }
+    set $erp_backend http://${ERP_BACKEND};
+    proxy_pass $erp_backend$request_uri;
+    proxy_set_header X-Frappe-Site-Name $http_x_frappe_site_name;
+    proxy_set_header Host $http_x_frappe_site_name;
+    proxy_read_timeout 60s;
+  }
+  location / { return 404; }
+}

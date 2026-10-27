@@ -1,7 +1,9 @@
+let acceptanceFailed=false;
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import {privateConfig,databaseUrl} from '../scripts/lib/private-config.mjs';
 import {Client} from '../scripts/lib/acceptance-actions.mjs';
 import {createWebServer} from '../scripts/lib/web-server.mjs';
@@ -17,7 +19,9 @@ const {createPlatformApp}=await import('../apps/platform-api/src/main.ts');
 const {createFinanceApp}=await import('../apps/finance-api/src/main.ts');
 const {queue}=await import('../apps/finance-api/src/queue.ts');
 const {ERPNext}=await import('../packages/erpnext-adapter/index.ts');
-const checks=[],users=[],companies=[];let platform,finance,server;
+const deployed=process.env.DEPLOYED_TEST_BASE;
+const checks=[],users=[],companies=[];let platform,finance,server,platformStopped=false;
+const serverPlatform=action=>execFileSync('ssh',['-o','BatchMode=yes',process.env.TEST_SSH_HOST??'tuofei-dev',`sudo docker ${action} unified-workbench-platform-api-1`],{stdio:['ignore','pipe','pipe'],timeout:60000});
 const record=name=>{checks.push(name);console.log('PASS',name);};
 try{
   await seedDefinitions();
@@ -28,8 +32,9 @@ try{
     if(name==='admin')await platformDb.roleAssignment.create({data:{userId:u.id,roleId,applicationId:'platform',scopeType:'instance'}});
     else for(const c of name==='reader'?[companies[0]]:companies)await platformDb.roleAssignment.create({data:{userId:u.id,roleId,applicationId:'finance',scopeType:'company',companyId:c.id}});
   }
-  platform=await createPlatformApp();await platform.listen(0,'127.0.0.1');process.env.PLATFORM_INTERNAL_ORIGIN=await platform.getUrl();finance=await createFinanceApp();await finance.listen(0,'127.0.0.1');
-  server=createWebServer({platformOrigin:await platform.getUrl(),financeOrigin:await finance.getUrl()});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`http://127.0.0.1:${server.address().port}`;
+  let base=deployed;
+  if(!base){platform=await createPlatformApp();await platform.listen(0,'127.0.0.1');process.env.PLATFORM_INTERNAL_ORIGIN=await platform.getUrl();finance=await createFinanceApp();await finance.listen(0,'127.0.0.1');
+    server=createWebServer({platformOrigin:await platform.getUrl(),financeOrigin:await finance.getUrl()});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));base=`http://127.0.0.1:${server.address().port}`;}
   const customFetch=(url,options)=>fetch(url,{...options,signal:AbortSignal.timeout(45000)});
   const admin=new Client(base,customFetch),reader=new Client(base,customFetch),manager=new Client(base,customFetch);
   await admin.login(users[0].account,password);await reader.login(users[1].account,password);await manager.login(users[2].account,password);
@@ -37,12 +42,14 @@ try{
   assert.equal((await manager.request(route(companies[2],'context'))).data.provisionStatus,'UNPROVISIONED');
   assert.equal((await manager.request(route(companies[2],'manual-document'),{method:'POST',body:{}})).status,409);record('unprovisioned company status is visible and refuses accounting writes');
   const site=erpSites[0],key=randomUUID();
+  const placeholder=await financeDb.ledgerBinding.create({data:{platformCompanyId:companies[0].id,name:site.company,abbreviation:site.abbreviation,siteName:site.siteName,erpCompany:site.company,provisionStatus:'UNPROVISIONED'}});
   const provisioning={name:site.company,abbreviation:site.abbreviation,taxId:'',siteName:site.siteName,erpCompany:site.company,apiKey:site.apiKey,apiSecret:site.apiSecret};
   const provision=async(body)=>{const r=await fetch(base+route(companies[0],'ledger/provision'),{method:'POST',headers:{Cookie:manager.cookie,Origin:base,'Content-Type':'application/json','Idempotency-Key':key},body:JSON.stringify(body),signal:AbortSignal.timeout(60000)});return {status:r.status,data:await r.json()};};
   assert.equal((await provision({...provisioning,apiSecret:'invalid-test-credential'})).status,502);assert.equal((await manager.request(route(companies[0],'ledger'))).data.provisionStatus,'FAILED');
   assert.equal((await provision(provisioning)).status,201);assert.equal((await provision(provisioning)).status,200);assert.equal((await provision({...provisioning,name:'different request'})).status,409);
   assert.equal(await financeDb.ledgerBinding.count({where:{platformCompanyId:companies[0].id}}),1);record('real ERP verification fails safely, retries with same key, and prevents duplicate bindings');
   const ledgerA=await financeDb.ledgerBinding.findUniqueOrThrow({where:{platformCompanyId:companies[0].id}}),other=erpSites[1];
+  assert.equal(ledgerA.id,placeholder.id);record('provisioning an existing unprovisioned ledger preserves its historical ID');
   const ledgerB=await financeDb.ledgerBinding.create({data:{platformCompanyId:companies[1].id,name:other.company,abbreviation:other.abbreviation,siteName:other.siteName,erpCompany:other.company,apiCredential:encrypt(other.apiKey+':'+other.apiSecret)}});
   const docA=await financeDb.document.create({data:{tenantId:ledgerA.id,filename:'虚构验收单据.json',contentHash:randomUUID(),storagePath:path.join(uploadRoot,'fixture-a.json'),mimeType:'application/json',status:'DRAFT'}});
   const docB=await financeDb.document.create({data:{tenantId:ledgerB.id,filename:'虚构验收单据.json',contentHash:randomUUID(),storagePath:path.join(uploadRoot,'fixture-b.json'),mimeType:'application/json',status:'REVIEW'}});
@@ -55,23 +62,30 @@ try{
   assert.equal((await reader.request(route(companies[0],`documents/${docB.id}`))).status,404);record('real gateway enforces anonymous, admin-only, read-only, company and resource boundaries');
   assert.equal((await reader.request(route(companies[0],'documents'))).status,200);
   const list=(await reader.request(route(companies[0],'documents'))).data;assert.ok(list.some(d=>d.id===docA.id));assert.ok(!list.some(d=>d.id===docB.id));record('authorized read resolves platform company to its own finance ledger');
-  const origin=process.env.PLATFORM_INTERNAL_ORIGIN;process.env.PLATFORM_INTERNAL_ORIGIN='http://127.0.0.1:1';
-  assert.equal((await manager.request(route(companies[0],`documents/${docA.id}/submit`),{method:'POST',body:{confirmation:'确认提交正式账务'}})).status,503);process.env.PLATFORM_INTERNAL_ORIGIN=origin;
+  const origin=process.env.PLATFORM_INTERNAL_ORIGIN;
+  if(deployed){serverPlatform('stop');platformStopped=true;}else process.env.PLATFORM_INTERNAL_ORIGIN='http://127.0.0.1:1';
+  assert.equal((await manager.request(route(companies[0],`documents/${docA.id}/submit`),{method:'POST',body:{confirmation:'确认提交正式账务'}})).status,503);
+  if(deployed){serverPlatform('start');platformStopped=false;let ready=false;for(let i=0;i<45;i++){try{if((await fetch(base+'/api/platform/health')).ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,1000));}assert.ok(ready);}else process.env.PLATFORM_INTERNAL_ORIGIN=origin;
   assert.deepEqual(await counts(),before);record('authorization outage fails closed; real finance records and ERP voucher counts unchanged');
   assert.equal((await manager.request('/internal/auth/introspect',{method:'POST',body:{}})).status,404);
-  const noService=await fetch(origin+'/internal/auth/introspect',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});assert.equal(noService.status,401);record('gateway hides internal authentication; direct service requires its credential');
+  if(deployed){
+    const code="fetch('http://127.0.0.1:3101/internal/auth/introspect',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>console.log(r.status))";
+    const status=execFileSync('ssh',['-o','BatchMode=yes',process.env.TEST_SSH_HOST??'tuofei-dev',"sudo docker exec unified-workbench-platform-api-1 node -e "+"'"+code.replaceAll("'","'\\''")+"'"],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:30000});assert.equal(status.trim(),'401');
+  }else{const noService=await fetch(origin+'/internal/auth/introspect',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});assert.equal(noService.status,401);}record('gateway hides internal authentication; direct service requires its credential');
   assert.equal((await manager.request(route(companies[0],'manual-document'),{method:'POST',body:{},origin:'https://attacker.invalid'})).status,403);
   const grant=await platformDb.roleAssignment.findFirstOrThrow({where:{userId:users[1].id,applicationId:'finance'}});
   assert.equal((await admin.request('/api/platform/assignments/'+grant.id,{method:'DELETE'})).status,204);
   assert.equal((await reader.request(route(companies[0],'documents'))).status,403);record('revocation is immediate through the complete platform-finance chain');
   await manager.request('/api/platform/auth/logout',{method:'POST'});assert.equal((await manager.request(route(companies[0],`documents/${docA.id}/submit`),{method:'POST',body:{confirmation:'确认提交正式账务'}})).status,401);record('logged-out session cannot submit finance records');
   assert.deepEqual(await counts(),before);assert.equal((await financeDb.document.findUniqueOrThrow({where:{id:docA.id}})).status,'DRAFT');record('all rejected writes preserve business and ERP state');
-  fs.mkdirSync('test-results',{recursive:true});fs.writeFileSync('test-results/T08-finance-authorization.json',JSON.stringify({executedAt:new Date().toISOString(),result:'passed',database:'two real PostgreSQL containers',erp:'two isolated real ERPNext test sites',checks},null,2)+'\n');
-}catch(error){console.error('T08 failed after',checks.length,'checks:',error.code??error.name,error.message?.slice(0,120));process.exitCode=1;}
+  fs.mkdirSync('test-results',{recursive:true});fs.writeFileSync(`test-results/${deployed?'T10-finance-authorization':'T08-finance-authorization'}.json`,JSON.stringify({executedAt:new Date().toISOString(),result:'passed',database:'two real PostgreSQL containers',erp:'two isolated real ERPNext test sites',transport:deployed?'deployed Docker gateway':'real local HTTP',checks},null,2)+'\n');
+}catch(error){console.error('T08 failed after',checks.length,'checks:',error.code??error.name,error.message?.slice(0,120));acceptanceFailed=true;process.exitCode=1;}
 finally{
+  if(platformStopped)serverPlatform('start');
   if(server)await new Promise(resolve=>server.close(resolve));await finance?.close();await platform?.close();await queue.close();
   const ledgers=await financeDb.ledgerBinding.findMany({where:{platformCompanyId:{in:companies.map(c=>c.id)}},select:{id:true}}),ledgerIds=ledgers.map(l=>l.id),userIds=users.map(u=>u.id);
   await financeDb.document.deleteMany({where:{tenantId:{in:ledgerIds}}});await financeDb.audit.deleteMany({where:{tenantId:{in:ledgerIds}}});await financeDb.ledgerBinding.deleteMany({where:{id:{in:ledgerIds}}});
   await platformDb.roleAssignment.deleteMany({where:{userId:{in:userIds}}});await platformDb.userCompany.deleteMany({where:{userId:{in:userIds}}});await platformDb.session.deleteMany({where:{userId:{in:userIds}}});await platformDb.platformAudit.deleteMany({where:{actorId:{in:userIds}}});await platformDb.user.deleteMany({where:{id:{in:userIds}}});await platformDb.company.deleteMany({where:{id:{in:companies.map(c=>c.id)}}});await financeDb.$disconnect();await platformDb.$disconnect();
   if(uploadRoot.startsWith(path.resolve('.local')+path.sep))fs.rmSync(uploadRoot,{recursive:true,force:true});
+if(acceptanceFailed)process.exitCode=1;
 }

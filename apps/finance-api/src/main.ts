@@ -94,7 +94,7 @@ class ApiController {
   @Get("health") async health() {
     await db.$queryRaw`SELECT 1`;
     await queue.getJobCounts();
-    return { status: "ok", version: "0.1.0", activeWrites };
+    return { status: "ok", service: "finance-api", revision: process.env.APP_REVISION ?? "development", activeWrites };
   }
   @Patch("companies/:companyId/ledger") async updateTenant(
     @Req() req: R,

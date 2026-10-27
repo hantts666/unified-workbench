@@ -1,0 +1,127 @@
+name: unified-workbench
+services:
+  platform-api:
+    image: unified-workbench/platform-api:${APP_REVISION:?required}
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: platform-api
+      args: {APP_REVISION: '${APP_REVISION}'}
+    environment:
+      PLATFORM_DATABASE_URL: ${PLATFORM_DATABASE_URL:?required}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:?required}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      BOOTSTRAP_ACCOUNT: ${BOOTSTRAP_ACCOUNT:-owner}
+      BOOTSTRAP_PASSWORD: ${BOOTSTRAP_PASSWORD:?required}
+    networks: [platform-data, services]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3101/api/platform/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 8s
+      retries: 6
+    mem_limit: 512m
+  finance-api:
+    image: unified-workbench/finance-api:${APP_REVISION:?required}
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: finance-api
+      args: {APP_REVISION: '${APP_REVISION}'}
+    environment: &finance-env
+      FINANCE_DATABASE_URL: ${FINANCE_DATABASE_URL:?required}
+      MASTER_KEY: ${MASTER_KEY:?required}
+      REDIS_URL: redis://finance-redis:6379
+      PLATFORM_INTERNAL_ORIGIN: http://platform-api:3101
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:?required}
+      ERP_ORIGIN: http://erp-proxy:8080
+      ERP_ALLOWED_SITES: unified-a.localhost,unified-b.localhost,unified-migration-a.localhost,unified-migration-b.localhost
+    networks: [finance-data, services, erp-access]
+    volumes: [finance-uploads:/app/uploads]
+    restart: unless-stopped
+    depends_on:
+      platform-api: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3102/api/finance/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 8s
+      retries: 6
+    mem_limit: 768m
+  finance-worker:
+    image: unified-workbench/finance-worker:${APP_REVISION:?required}
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: finance-worker
+      args: {APP_REVISION: '${APP_REVISION}'}
+    environment:
+      FINANCE_DATABASE_URL: ${FINANCE_DATABASE_URL:?required}
+      MASTER_KEY: ${MASTER_KEY:?required}
+      REDIS_URL: redis://finance-redis:6379
+      ERP_ORIGIN: http://erp-proxy:8080
+    networks: [finance-data, erp-access, worker-egress]
+    volumes: [finance-uploads:/app/uploads]
+    restart: unless-stopped
+    mem_limit: 768m
+  portal-web:
+    image: unified-workbench/portal-web:${APP_REVISION:?required}
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: web
+      args: {WEB_APP: portal}
+    networks: [services]
+    restart: unless-stopped
+    mem_limit: 128m
+  finance-web:
+    image: unified-workbench/finance-web:${APP_REVISION:?required}
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: web
+      args: {WEB_APP: finance}
+    networks: [services]
+    restart: unless-stopped
+    mem_limit: 128m
+  sample-web:
+    image: unified-workbench/sample-web:${APP_REVISION:?required}
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: web
+      args: {WEB_APP: sample}
+    networks: [services]
+    restart: unless-stopped
+    mem_limit: 128m
+  erp-proxy:
+    image: nginx:1.28-alpine
+    environment:
+      ERP_BACKEND: ${ERP_BACKEND:-finance-backend-1:8000}
+    volumes:
+      - ../nginx/erp-test-proxy.conf.template:/etc/nginx/templates/default.conf.template:ro
+    networks: [erp-access, existing-erp]
+    restart: unless-stopped
+    mem_limit: 128m
+  edge:
+    image: nginx:1.28-alpine
+    volumes: [../nginx/edge.conf:/etc/nginx/conf.d/default.conf:ro]
+    ports: ['${WEB_BIND:-0.0.0.0}:${WEB_PORT:-3200}:8080']
+    networks: [services, public]
+    restart: unless-stopped
+    depends_on:
+      platform-api: {condition: service_healthy}
+      finance-api: {condition: service_healthy}
+      portal-web: {condition: service_started}
+      finance-web: {condition: service_started}
+      sample-web: {condition: service_started}
+    mem_limit: 128m
+networks:
+  platform-data: {external: true, name: unified-workbench_platform-data}
+  finance-data: {external: true, name: unified-workbench_finance-data}
+  existing-erp: {external: true, name: '${ERP_NETWORK:-finance_default}'}
+  services: {internal: true}
+  erp-access: {internal: true}
+  public: {}
+  worker-egress: {}
+volumes:
+  finance-uploads:

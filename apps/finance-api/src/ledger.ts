@@ -80,7 +80,7 @@ export function registerLedger(router: Router) {
         });
         let result;
         if (existing) {
-          if (existing.provisionStatus !== "FAILED")
+          if (!['FAILED','UNPROVISIONED'].includes(existing.provisionStatus))
             throw new ApiFailure(
               409,
               "PROVISION_IN_PROGRESS",
@@ -90,7 +90,7 @@ export function registerLedger(router: Router) {
             where: {
               id: existing.id,
               version: existing.version,
-              provisionStatus: "FAILED",
+              provisionStatus: existing.provisionStatus,
             },
             data: {
               ...metadata,
