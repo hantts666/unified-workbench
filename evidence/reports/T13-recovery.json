@@ -1,0 +1,87 @@
+{
+  "executedAt": "2026-10-27T11:36:54.749Z",
+  "result": "passed",
+  "reports": [
+    {
+      "executedAt": "2026-10-27T11:31:09Z",
+      "result": "passed",
+      "checks": [
+        "all private backup files match manifest SHA-256",
+        "platform restored in disconnected container: every row count and full-table digest matches",
+        "finance restored in disconnected container: every row count and full-table digest matches",
+        "every restored attachment matches the SHA-256 in the restored finance database; source volume untouched",
+        "Redis snapshot checksum and persisted key count match; restored live keys exclude expired temporary markers"
+      ],
+      "tables": 16
+    },
+    {
+      "executedAt": "2026-10-27T11:31:51Z",
+      "result": "passed",
+      "checks": [
+        "ERP replica a restored: vouchers, entries, general ledger, accounts and projects match",
+        "ERP replica b restored: vouchers, entries, general ledger, accounts and projects match"
+      ],
+      "originalSitesModified": false
+    },
+    {
+      "result": "passed",
+      "revision": "99a2bcb75686be167bdc89861d02047bce509a23",
+      "images": [
+        {
+          "service": "platform-api",
+          "imageId": "sha256:f9d94599e5fc857bdd4703c4f9b59615b673bbd4c9eed055873535938f3c9bdf",
+          "files": 13,
+          "findings": 0
+        },
+        {
+          "service": "finance-api",
+          "imageId": "sha256:76c32472d401a3a5af7f46dda4611b292f3a32d4d3c0e754bb56db17474e2134",
+          "files": 19,
+          "findings": 0
+        },
+        {
+          "service": "finance-worker",
+          "imageId": "sha256:1403bc70d3701f3816e68a0cff39057a8019f57c2f60d656380547a67dce6872",
+          "files": 20,
+          "findings": 0
+        },
+        {
+          "service": "portal-web",
+          "imageId": "sha256:d8e6d1d6d437d849e7b70d51f2e6cdf56fb048c423b7fdf25cf84592b38a2725",
+          "files": 4,
+          "findings": 0
+        },
+        {
+          "service": "finance-web",
+          "imageId": "sha256:1de29c45ac69f77955036c396fd43ae0e07d03fd580c5b4edeb3ea4963053b42",
+          "files": 4,
+          "findings": 0
+        },
+        {
+          "service": "sample-web",
+          "imageId": "sha256:4cad19a0f5cefed50019735945f786e9003c9284eb66db8bf06a8d0d0eb443fe",
+          "files": 5,
+          "findings": 0
+        }
+      ],
+      "checks": [
+        "application image files contain no private artifacts",
+        "image defaults contain no credentials",
+        "Docker build context uses an explicit source allowlist"
+      ]
+    },
+    {
+      "executedAt": "2026-10-27T11:34:09.315Z",
+      "result": "passed",
+      "fromRevision": "99a2bcb75686be167bdc89861d02047bce509a23",
+      "toRevision": "26b9dc3867a2dc3d33d79a56e1e1e140be5260db",
+      "checks": [
+        "new formal voucher created after backup",
+        "application images rolled back to an earlier compatible revision",
+        "all finance documents and ERP vouchers remain unchanged",
+        "newly submitted voucher remains idempotent after rollback"
+      ],
+      "databaseRestorePerformed": false
+    }
+  ]
+}

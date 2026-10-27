@@ -1,0 +1,24 @@
+{
+  "taskId": "T13",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "0d3924c81a54f083d54b674bcc94dff39ea3aa78",
+  "executedAt": "2026-10-27T11:37:21.134Z",
+  "checks": [
+    {
+      "acceptanceId": "AC20",
+      "status": "passed",
+      "command": "backup-test.py; restore-test-databases.py; restore-test-erp.py; audit-images.py; node tests/rollback.integration.mjs; npm run public:audit",
+      "exitCode": 0,
+      "report": "evidence/reports/T13-recovery.json",
+      "reportSha256": "f9864f264a57b15f0972dfae51940643c222640f0d01c5fce9b2b5535f889287"
+    },
+    {
+      "acceptanceId": "AC21",
+      "status": "passed",
+      "command": "backup-test.py; restore-test-databases.py; restore-test-erp.py; audit-images.py; node tests/rollback.integration.mjs; npm run public:audit",
+      "exitCode": 0,
+      "report": "evidence/reports/T13-recovery.json",
+      "reportSha256": "f9864f264a57b15f0972dfae51940643c222640f0d01c5fce9b2b5535f889287"
+    }
+  ]
+}

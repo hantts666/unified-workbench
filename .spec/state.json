@@ -73,8 +73,14 @@
       "evidence": "evidence/T12.json"
     },
     "T13": {
+      "status": "done",
+      "startedAt": "2026-10-27T11:14:29.334Z",
+      "completedAt": "2026-10-27T11:37:22.616Z",
+      "evidence": "evidence/T13.json"
+    },
+    "T14": {
       "status": "in_progress",
-      "startedAt": "2026-10-27T11:14:29.334Z"
+      "startedAt": "2026-10-27T11:37:23.884Z"
     }
   },
   "note": "未记录的任务均为 pending；本次只完成项目准备，不启动业务任务。"
