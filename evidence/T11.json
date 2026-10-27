@@ -1,0 +1,24 @@
+{
+  "taskId": "T11",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "60721cb902fb343419d8466d2075dced442601d3",
+  "executedAt": "2026-10-27T10:44:34.695Z",
+  "checks": [
+    {
+      "acceptanceId": "AC14",
+      "status": "passed",
+      "command": "node --import tsx tests/migration.integration.mjs --test-login <private-file>",
+      "exitCode": 0,
+      "report": "evidence/reports/T11-migration.json",
+      "reportSha256": "359fdcdc2b4ad69cc62bd9d9d461833a59b711ef018c91aae6abf928bbc31ce6"
+    },
+    {
+      "acceptanceId": "AC24",
+      "status": "passed",
+      "command": "node --import tsx tests/migration.integration.mjs --test-login <private-file>",
+      "exitCode": 0,
+      "report": "evidence/reports/T11-migration.json",
+      "reportSha256": "359fdcdc2b4ad69cc62bd9d9d461833a59b711ef018c91aae6abf928bbc31ce6"
+    }
+  ]
+}
