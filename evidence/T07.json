@@ -1,0 +1,40 @@
+{
+  "taskId": "T07",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "7c941ecad88ba185e3af5831b55afe619e6b9823",
+  "executedAt": "2026-10-27T10:42:55.823Z",
+  "checks": [
+    {
+      "acceptanceId": "AC09",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run build:finance; npm run test:finance-browser",
+      "exitCode": 0,
+      "report": "evidence/reports/T07-finance-browser.json",
+      "reportSha256": "7064841fc41ef3eec70de1601c48524983e6fc6090a1edf09356d680c79c63db"
+    },
+    {
+      "acceptanceId": "AC10",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run build:finance; npm run test:finance-browser",
+      "exitCode": 0,
+      "report": "evidence/reports/T07-finance-browser.json",
+      "reportSha256": "7064841fc41ef3eec70de1601c48524983e6fc6090a1edf09356d680c79c63db"
+    },
+    {
+      "acceptanceId": "AC11",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run build:finance; npm run test:finance-browser",
+      "exitCode": 0,
+      "report": "evidence/reports/T07-finance-browser.json",
+      "reportSha256": "7064841fc41ef3eec70de1601c48524983e6fc6090a1edf09356d680c79c63db"
+    },
+    {
+      "acceptanceId": "AC12",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run build:finance; npm run test:finance-browser",
+      "exitCode": 0,
+      "report": "evidence/reports/T07-finance-browser.json",
+      "reportSha256": "7064841fc41ef3eec70de1601c48524983e6fc6090a1edf09356d680c79c63db"
+    }
+  ]
+}
