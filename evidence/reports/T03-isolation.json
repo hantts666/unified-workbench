@@ -1,0 +1,22 @@
+{
+  "database": {
+    "executedAt": "2026-10-27T09:00:36.577Z",
+    "result": "passed",
+    "checks": [
+      "platform and finance tables physically separated",
+      "both cross-database credential attempts rejected",
+      "application roles cannot create tables, roles or databases",
+      "application roles can query their own business tables"
+    ],
+    "platformTableCount": 11,
+    "financeTableCount": 7
+  },
+  "network": {
+    "result": "passed",
+    "containers": 2,
+    "distinctVolumes": true,
+    "distinctNetworks": true,
+    "crossNetworkRejected": true,
+    "publicDatabasePorts": 0
+  }
+}
