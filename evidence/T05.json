@@ -1,0 +1,32 @@
+{
+  "taskId": "T05",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "2e4edb0ffc8967dc65dc4979b262626e0e9fc4cf",
+  "executedAt": "2026-10-27T09:35:11.441Z",
+  "checks": [
+    {
+      "acceptanceId": "AC07",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run test:permissions",
+      "exitCode": 0,
+      "report": "evidence/reports/T05-permissions.json",
+      "reportSha256": "1015cb3ea1c74f1f6a88b56ee51af2da1855f7cabc7c8105f9b84a5635ffafac"
+    },
+    {
+      "acceptanceId": "AC22",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run test:permissions",
+      "exitCode": 0,
+      "report": "evidence/reports/T05-permissions.json",
+      "reportSha256": "1015cb3ea1c74f1f6a88b56ee51af2da1855f7cabc7c8105f9b84a5635ffafac"
+    },
+    {
+      "acceptanceId": "AC23",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run test:permissions",
+      "exitCode": 0,
+      "report": "evidence/reports/T05-permissions.json",
+      "reportSha256": "1015cb3ea1c74f1f6a88b56ee51af2da1855f7cabc7c8105f9b84a5635ffafac"
+    }
+  ]
+}
