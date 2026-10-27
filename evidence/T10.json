@@ -1,0 +1,88 @@
+{
+  "taskId": "T10",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "26b9dc3867a2dc3d33d79a56e1e1e140be5260db",
+  "executedAt": "2026-10-27T11:12:50.139Z",
+  "checks": [
+    {
+      "acceptanceId": "AC01",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    },
+    {
+      "acceptanceId": "AC02",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    },
+    {
+      "acceptanceId": "AC03",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    },
+    {
+      "acceptanceId": "AC04",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    },
+    {
+      "acceptanceId": "AC05",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    },
+    {
+      "acceptanceId": "AC06",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    },
+    {
+      "acceptanceId": "AC16",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    },
+    {
+      "acceptanceId": "AC17",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    },
+    {
+      "acceptanceId": "AC18",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    },
+    {
+      "acceptanceId": "AC23",
+      "status": "passed",
+      "command": "DEPLOYED_TEST_BASE=<isolated-test> npm run test:deployed",
+      "exitCode": 0,
+      "report": "evidence/reports/T10-deployed.json",
+      "reportSha256": "7ef6d508577375d1bbc615bee07d01c3d99b90d6f9b30716bdd98e3f8e915b2f"
+    }
+  ]
+}

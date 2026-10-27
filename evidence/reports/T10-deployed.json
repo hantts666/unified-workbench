@@ -1,0 +1,44 @@
+{
+  "executedAt": "2026-10-27T11:11:41.544Z",
+  "result": "passed",
+  "deployedRevision": "26b9dc3867a2dc3d33d79a56e1e1e140be5260db",
+  "reports": [
+    {
+      "executedAt": "2026-10-27T11:10:54.971Z",
+      "result": "passed",
+      "database": "real PostgreSQL test container",
+      "transport": "deployed Docker gateway",
+      "checks": [
+        "legacy scrypt hashes compatible",
+        "anonymous-me",
+        "login-and-me",
+        "reject-cross-origin-logout",
+        "logout-and-reject-session",
+        "missing Origin rejected",
+        "hashed and expiring sessions",
+        "disabled account invalidates active session",
+        "password change revokes every session",
+        "account login rate limit persisted in database"
+      ]
+    },
+    {
+      "executedAt": "2026-10-27T11:11:38.879Z",
+      "result": "passed",
+      "database": "two real PostgreSQL containers",
+      "erp": "two isolated real ERPNext test sites",
+      "transport": "deployed Docker gateway",
+      "checks": [
+        "unprovisioned company status is visible and refuses accounting writes",
+        "real ERP verification fails safely, retries with same key, and prevents duplicate bindings",
+        "provisioning an existing unprovisioned ledger preserves its historical ID",
+        "real gateway enforces anonymous, admin-only, read-only, company and resource boundaries",
+        "authorized read resolves platform company to its own finance ledger",
+        "authorization outage fails closed; real finance records and ERP voucher counts unchanged",
+        "gateway hides internal authentication; direct service requires its credential",
+        "revocation is immediate through the complete platform-finance chain",
+        "logged-out session cannot submit finance records",
+        "all rejected writes preserve business and ERP state"
+      ]
+    }
+  ]
+}

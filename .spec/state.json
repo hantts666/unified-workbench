@@ -61,8 +61,10 @@
       "evidence": "evidence/T09.json"
     },
     "T10": {
-      "status": "in_progress",
-      "startedAt": "2026-10-27T10:52:24.159Z"
+      "status": "done",
+      "startedAt": "2026-10-27T10:52:24.159Z",
+      "completedAt": "2026-10-27T11:12:51.065Z",
+      "evidence": "evidence/T10.json"
     },
     "T12": {
       "status": "in_progress",
