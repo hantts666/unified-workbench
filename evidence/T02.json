@@ -1,0 +1,16 @@
+{
+  "taskId": "T02",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "76742def684e2c949cc61474ec6b8ffcd4a7e4a2",
+  "executedAt": "2026-10-27T08:41:40.825Z",
+  "checks": [
+    {
+      "acceptanceId": "AC27",
+      "status": "passed",
+      "command": "npm run typecheck; node --test tests/platform-sdk.test.mjs",
+      "exitCode": 0,
+      "report": "evidence/reports/T02-sdk.json",
+      "reportSha256": "40bde3e3dd17110a47369585adc719eb133e87c1cf9d7e6c5f3c7a305642c6aa"
+    }
+  ]
+}
