@@ -12,5 +12,8 @@ export function databaseUrl(kind,owner=false,config=privateConfig()) {
   if(!password)throw new Error('Missing private database credential');
   const host=process.env.DATABASE_TEST_HOST??'127.0.0.1';
   const port=kind==='platform'?(process.env.PLATFORM_TEST_PORT??'25432'):(process.env.FINANCE_TEST_PORT??'25433');
-  const url=new URL(`postgresql://${host}:${port}/${kind}`);url.username=role;url.password=password;return url.href;
+  const url=new URL(`postgresql://${host}:${port}/${kind}`);url.username=role;url.password=password;
+  // Keep test connections bounded across an SSH tunnel; application deployment sets its own pool.
+  url.searchParams.set('connection_limit','3');url.searchParams.set('connect_timeout','15');
+  return url.href;
 }

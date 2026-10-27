@@ -21,6 +21,7 @@
     "test:database": "node tests/database-isolation.integration.mjs",
     "start:platform": "node --import tsx apps/platform-api/src/main.ts",
     "test:auth": "node --import tsx tests/platform-auth.integration.mjs",
+    "test:permissions": "node --import tsx tests/platform-permissions.integration.mjs",
     "build:poc": "node scripts/build-poc.mjs",
     "test:poc": "node tests/poc-browser.mjs",
     "spec:check": "node scripts/specctl.mjs check",
@@ -57,11 +58,14 @@
     "yaml": "2.9.1"
   },
   "dependencies": {
+    "@ant-design/icons": "6.1.0",
     "@nestjs/common": "11.2.8",
     "@nestjs/core": "11.2.8",
     "@nestjs/platform-express": "11.2.8",
     "@prisma/client": "6.19.0",
+    "antd": "5.29.3",
     "cookie-parser": "1.4.7",
+    "dayjs": "1.11.19",
     "express": "5.3.0",
     "helmet": "8.3.0",
     "qiankun": "2.10.16",

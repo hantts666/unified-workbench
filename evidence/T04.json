@@ -1,0 +1,40 @@
+{
+  "taskId": "T04",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "e92ac2afa6585e11423ba2b3b65f6021ec7b763c",
+  "executedAt": "2026-10-27T09:13:27.461Z",
+  "checks": [
+    {
+      "acceptanceId": "AC01",
+      "status": "passed",
+      "command": "npm run typecheck; npm run test:auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T04-auth.json",
+      "reportSha256": "5403491a5f03f1d344171fb58446575d62814d6e2ba91c17ddd4d3d9bb211506"
+    },
+    {
+      "acceptanceId": "AC02",
+      "status": "passed",
+      "command": "npm run typecheck; npm run test:auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T04-auth.json",
+      "reportSha256": "5403491a5f03f1d344171fb58446575d62814d6e2ba91c17ddd4d3d9bb211506"
+    },
+    {
+      "acceptanceId": "AC03",
+      "status": "passed",
+      "command": "npm run typecheck; npm run test:auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T04-auth.json",
+      "reportSha256": "5403491a5f03f1d344171fb58446575d62814d6e2ba91c17ddd4d3d9bb211506"
+    },
+    {
+      "acceptanceId": "AC18",
+      "status": "passed",
+      "command": "npm run typecheck; npm run test:auth",
+      "exitCode": 0,
+      "report": "evidence/reports/T04-auth.json",
+      "reportSha256": "5403491a5f03f1d344171fb58446575d62814d6e2ba91c17ddd4d3d9bb211506"
+    }
+  ]
+}

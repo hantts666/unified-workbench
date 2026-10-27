@@ -1,0 +1,24 @@
+{
+  "executedAt": "2026-10-27T09:32:35.487Z",
+  "result": "passed",
+  "database": "real PostgreSQL test container",
+  "transport": "real HTTP",
+  "authorizationCacheSeconds": 0,
+  "checks": [
+    "platform endpoints require their own permission",
+    "company membership alone does not authorize applications",
+    "application, company and operation grants are independently enforced",
+    "internal service credential is scoped to finance",
+    "platform administrator does not inherit finance privileges",
+    "API and database reject cross-application role permissions",
+    "duplicate and unscoped grants are rejected",
+    "revocation is effective on the next request",
+    "role changes immediately update effective permissions",
+    "disabled applications disappear and reject authorization",
+    "disabled company prevents finance access",
+    "membership revocation prevents residual role access",
+    "reactivation does not revive a revoked session",
+    "application entries are deployment-owned",
+    "administration audit excludes credentials"
+  ]
+}
