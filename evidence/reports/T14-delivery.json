@@ -1,0 +1,58 @@
+{
+  "executedAt": "2026-10-27T11:50:55.698Z",
+  "result": "passed",
+  "environment": "isolated-test",
+  "productionCutoverPerformed": false,
+  "reports": [
+    {
+      "kind": "public-browser",
+      "applicationRevision": "a1861554199848eec204846c1401daf8790e73bc",
+      "executedAt": "2026-10-27T11:46:01.810Z",
+      "result": "passed",
+      "browser": "145.0.3800.97",
+      "checks": [
+        "public test URL accepts migrated login and renders existing finance documents",
+        "original attachment remains downloadable through authorized finance API",
+        "second application opens independently and refreshes its nested route",
+        "platform owner can manage users and has no implicit finance permission",
+        "administration page refresh renders the deployed management UI",
+        "logout invalidates the previous cookie on the deployed platform"
+      ],
+      "pageErrors": []
+    },
+    {
+      "kind": "clean-install",
+      "executedAt": "2026-10-27T11:33:29Z",
+      "result": "passed",
+      "revision": "706631c1535b78499fa70f38f71e192563d0bc89",
+      "newVolumes": true,
+      "checks": [
+        "fresh volumes contain only the newly seeded owner and no legacy companies",
+        "initial owner can create a company, membership and scoped application grants through HTTP",
+        "fresh finance service resolves authorized company and rejects writes for read-only role",
+        "portal refresh and both separately built child entries are served by the new gateway",
+        "both API health revisions match the freshly deployed release"
+      ]
+    }
+  ],
+  "recoveryEvidence": {
+    "report": "evidence/reports/T13-recovery.json",
+    "reportSha256": "f9864f264a57b15f0972dfae51940643c222640f0d01c5fce9b2b5535f889287",
+    "result": "passed",
+    "checks": [
+      "isolated database, attachment, Redis and ERP restores passed",
+      "compatible application rollback retained records created after backup"
+    ]
+  },
+  "documents": [
+    "docs/USER-GUIDE.md",
+    "docs/DATABASE.md",
+    "docs/DEPLOYMENT.md",
+    "docs/MIGRATION-REHEARSAL.md",
+    "docs/APPLICATION-INTEGRATION.md",
+    "docs/KNOWN-LIMITATIONS.md",
+    "docs/CUTOVER.md"
+  ],
+  "limitationsDocument": "docs/KNOWN-LIMITATIONS.md",
+  "scopeNote": "Fresh-volume deployment validated revision 706631c; public browser acceptance validated a186155, which adds the HTTP-compatible upload idempotency key. Production cutover and destructive schema rollback were not performed."
+}
