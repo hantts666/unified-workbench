@@ -29,5 +29,5 @@ try{
   assert.equal((await client.request(root+'/documents/'+doc.id+'/submit',{method:'POST',body:{confirmation:'确认提交正式账务'}})).data.name,submit.data.name);
   fs.writeFileSync('test-results/T13-rollback.json',JSON.stringify({executedAt:new Date().toISOString(),result:'passed',fromRevision:before,toRevision:previous,checks:['new formal voucher created after backup','application images rolled back to an earlier compatible revision','all finance documents and ERP vouchers remain unchanged','newly submitted voucher remains idempotent after rollback'],databaseRestorePerformed:false},null,2)+'\n');
 }finally{
-  if(switched)await ssh('python3 /data/projects/unified-workbench/source-current/scripts/deploy-test.py --skip-build > /data/projects/unified-workbench/private/redeploy-after-rollback.log 2>&1');
+  if(switched)await ssh('python3 /data/projects/unified-workbench/source-current/scripts/rollback-test.py --revision '+before+' > /data/projects/unified-workbench/private/redeploy-after-rollback.log 2>&1');
 }

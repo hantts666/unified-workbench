@@ -13,7 +13,7 @@ for kind,tables in manifest['databases'].items():
     try:
         docker('run','-d','--rm','--name',container,'--network','none','--tmpfs','/var/lib/postgresql:rw,size=256m','-e','POSTGRES_HOST_AUTH_METHOD=trust','-e','POSTGRES_DB='+kind,'postgres:18.6',stdout=subprocess.DEVNULL);created=True
         for i in range(60):
-            result=subprocess.run(['sudo','docker','exec',container,'pg_isready','-U','postgres','-d',kind],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            result=subprocess.run(['sudo','docker','exec',container,'pg_isready','-h','127.0.0.1','-U','postgres','-d',kind],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             if result.returncode==0:break
             time.sleep(1)
         else:raise SystemExit('Restore PostgreSQL did not become ready')
