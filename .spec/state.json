@@ -31,8 +31,10 @@
       "evidence": "evidence/T05.json"
     },
     "T06": {
-      "status": "in_progress",
-      "startedAt": "2026-10-27T09:35:16.857Z"
+      "status": "done",
+      "startedAt": "2026-10-27T09:35:16.857Z",
+      "completedAt": "2026-10-27T09:58:01.241Z",
+      "evidence": "evidence/T06.json"
     },
     "T08": {
       "status": "in_progress",

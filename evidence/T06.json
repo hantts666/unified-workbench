@@ -1,0 +1,24 @@
+{
+  "taskId": "T06",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "851152bc45b9beffb96659255e14096dcb30f28f",
+  "executedAt": "2026-10-27T09:58:00.115Z",
+  "checks": [
+    {
+      "acceptanceId": "AC08",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run build:portal; npm run test:portal",
+      "exitCode": 0,
+      "report": "evidence/reports/T06-portal.json",
+      "reportSha256": "f595d22c8c2009feb39ab9d64a3956a2841995b90a26810ab2a4ed14e1347668"
+    },
+    {
+      "acceptanceId": "AC22",
+      "status": "passed",
+      "command": "npm run typecheck; npm run check; npm run build:portal; npm run test:portal",
+      "exitCode": 0,
+      "report": "evidence/reports/T06-portal.json",
+      "reportSha256": "f595d22c8c2009feb39ab9d64a3956a2841995b90a26810ab2a4ed14e1347668"
+    }
+  ]
+}
