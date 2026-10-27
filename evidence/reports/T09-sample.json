@@ -1,0 +1,19 @@
+{
+  "executedAt": "2026-10-27T10:54:36.924Z",
+  "result": "passed",
+  "checks": [
+    "unavailable child entry shows recoverable error while portal remains usable",
+    "finance remains independently usable during sample outage",
+    "retry recovers failed child after its separately served entry is restored",
+    "sample nested route refresh loads its independent dynamic chunk",
+    "sample receives the current company without another selector",
+    "repeated finance/sample switching releases previous roots with no browser errors"
+  ],
+  "pageErrors": [],
+  "builds": [
+    "portal",
+    "finance",
+    "sample"
+  ],
+  "deployment": "separate built static roots behind real HTTP gateway"
+}

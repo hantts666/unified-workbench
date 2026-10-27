@@ -10,6 +10,7 @@ import { loadMicroApp, type MicroApp } from "qiankun";
 import { createContextStore } from "../../../packages/platform-sdk/index.js";
 import type { UserSummary } from "../../../packages/contracts/index.js";
 import { api, navigate } from "./api.js";
+const failedAttempts = new Map<string, number>();
 export interface MicroHandle {
   changeCompany: (id: string) => Promise<boolean>;
 }
@@ -83,20 +84,48 @@ export const MicroWorkspace = forwardRef<
           sessionExpired: () =>
             window.dispatchEvent(new Event("platform-session-expired")),
         };
+        // qiankun caches both rejected lifecycle promises and failed HTML entries.
+        // A retry must get a new cache key while successful mounts keep theirs.
+        const attempt = failedAttempts.get(application.code) ?? 0;
+        const entry = new URL(application.entry, location.origin);
+        if (attempt) entry.searchParams.set('retry', String(attempt));
         const app = loadMicroApp(
           {
-            name: application.code,
-            entry: application.entry,
+            name: attempt ? `${application.code}-retry-${attempt}` : application.code,
+            entry: entry.href,
             container: container.current!,
             props: { platform },
           },
-          { sandbox: { experimentalStyleIsolation: true }, singular: true },
+          {
+            sandbox: { experimentalStyleIsolation: true }, singular: true,
+            fetch: async (input, init) => {
+              const response = await fetch(input, {...init, signal: AbortSignal.timeout(20000)});
+              if (!response.ok) throw new Error('应用资源暂时不可用');
+              return response;
+            },
+            getTemplate: html => {
+              if (!attempt) return html;
+              const template = new DOMParser().parseFromString(html, 'text/html');
+              for (const element of Array.from(template.querySelectorAll('script[src],link[rel=stylesheet][href]'))) {
+                const attribute = element.tagName === 'SCRIPT' ? 'src' : 'href';
+                const resource = new URL(element.getAttribute(attribute)!, entry);
+                resource.searchParams.set('retry', String(attempt));
+                element.setAttribute(attribute, resource.href);
+              }
+              return template.documentElement.outerHTML;
+            },
+          },
         );
         instance.current = app;
+        // single-spa exposes separate rejecting promises for load and bootstrap.
+        // mountPromise below owns the visible error and retry state.
+        void app.loadPromise.catch(() => {});
+        void app.bootstrapPromise.catch(() => {});
         await app.mountPromise;
         if (!cancelled) setLoading(false);
       })
       .catch(() => {
+        failedAttempts.set(application.code, (failedAttempts.get(application.code) ?? 0) + 1);
         if (!cancelled) {
           setError("应用暂时无法打开，请重试。你仍可使用平台和其他应用。");
           setLoading(false);
@@ -112,8 +141,8 @@ export const MicroWorkspace = forwardRef<
         .then(async () => {
           const mounted = instance.current;
           instance.current = null;
-          if (mounted) await mounted.unmount();
-          previousStore?.dispose();
+          try { if (mounted) await mounted.unmount(); }
+          finally { previousStore?.dispose(); }
         });
     };
   }, [application.code, retry, user.id, companyId]);
