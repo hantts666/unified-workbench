@@ -1,0 +1,18 @@
+{
+  "executedAt": "2026-10-27T09:09:46.655Z",
+  "result": "passed",
+  "database": "real PostgreSQL test container",
+  "transport": "real HTTP",
+  "checks": [
+    "legacy scrypt hashes compatible",
+    "anonymous-me",
+    "login-and-me",
+    "reject-cross-origin-logout",
+    "logout-and-reject-session",
+    "missing Origin rejected",
+    "hashed and expiring sessions",
+    "disabled account invalidates active session",
+    "password change revokes every session",
+    "account login rate limit persisted in database"
+  ]
+}

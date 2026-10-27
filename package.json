@@ -4,7 +4,13 @@
   "private": true,
   "description": "统一管理平台与乾坤财务子系统：可执行规格及开发准备",
   "type": "module",
-  "overrides": {"@prisma/config": {"deepmerge-ts": "8.0.0", "effect": "3.20.0"}},
+  "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.0",
+      "effect": "3.20.0"
+    },
+    "multer": "2.5.0"
+  },
   "engines": {
     "node": ">=24 <25"
   },
@@ -13,6 +19,8 @@
     "db:generate": "node scripts/generate-clients.mjs",
     "db:migrate:test": "node scripts/migrate-test-databases.mjs",
     "test:database": "node tests/database-isolation.integration.mjs",
+    "start:platform": "node --import tsx apps/platform-api/src/main.ts",
+    "test:auth": "node --import tsx tests/platform-auth.integration.mjs",
     "build:poc": "node scripts/build-poc.mjs",
     "test:poc": "node tests/poc-browser.mjs",
     "spec:check": "node scripts/specctl.mjs check",
@@ -30,6 +38,8 @@
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "13.1.0",
+    "@types/cookie-parser": "1.4.10",
+    "@types/express": "5.0.6",
     "@types/node": "24.10.0",
     "@types/react": "19.2.0",
     "@types/react-dom": "19.2.0",
@@ -47,9 +57,19 @@
     "yaml": "2.9.1"
   },
   "dependencies": {
+    "@nestjs/common": "11.2.8",
+    "@nestjs/core": "11.2.8",
+    "@nestjs/platform-express": "11.2.8",
     "@prisma/client": "6.19.0",
+    "cookie-parser": "1.4.7",
+    "express": "5.3.0",
+    "helmet": "8.3.0",
     "qiankun": "2.10.16",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "tsx": "4.23.15",
+    "zod": "4.6.7"
   }
 }

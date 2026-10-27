@@ -1,0 +1,16 @@
+{
+  "taskId": "T03",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "dacf0d6d850f6d57a74ead6c215155fc033c9392",
+  "executedAt": "2026-10-27T09:03:38.938Z",
+  "checks": [
+    {
+      "acceptanceId": "AC13",
+      "status": "passed",
+      "command": "npm run db:migrate:test; npm run test:database; python3 scripts/check-data-isolation.py",
+      "exitCode": 0,
+      "report": "evidence/reports/T03-isolation.json",
+      "reportSha256": "8e3d0f0f6f0c281cfa26f70fdb38ff3671b96f8525971f488ddc4e1282511acf"
+    }
+  ]
+}
