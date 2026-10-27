@@ -1,0 +1,18 @@
+{
+  "notes": "这些是后续真实 HTTP 服务的最小验收用例，当前未执行；完整验收仍包含浏览器、故障注入、迁移和 ERP 回归。",
+  "profiles": {
+    "platform": [
+      {"id":"P01","acceptanceIds":["AC02"],"action":"anonymous-me","operationId":"getMe"},
+      {"id":"P02","acceptanceIds":["AC01"],"action":"login-and-me","operationId":"login"},
+      {"id":"P03","acceptanceIds":["AC18"],"action":"reject-cross-origin-logout","operationId":"logout"},
+      {"id":"P04","acceptanceIds":["AC03"],"action":"logout-and-reject-session","operationId":"logout"}
+    ],
+    "finance": [
+      {"id":"F01","acceptanceIds":["AC04"],"action":"platform-admin-denied-finance","operationId":"listFinanceDocuments"},
+      {"id":"F02","acceptanceIds":["AC05"],"action":"reader-denied-submit","operationId":"submitFinanceDocument"},
+      {"id":"F03","acceptanceIds":["AC06"],"action":"cross-company-denied","operationId":"listFinanceDocuments"},
+      {"id":"F04","acceptanceIds":["AC06"],"action":"cross-company-resource-denied","operationId":"getFinanceDocument"},
+      {"id":"F05","acceptanceIds":["AC03"],"action":"logged-out-submit-denied","operationId":"submitFinanceDocument"}
+    ]
+  }
+}

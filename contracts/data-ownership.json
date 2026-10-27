@@ -1,0 +1,43 @@
+{
+  "databases": [
+    {
+      "id": "platform_db",
+      "engine": "postgresql",
+      "ownerService": "platform-api",
+      "container": "platform-postgres",
+      "volume": "platform-postgres-data",
+      "account": "platform_app",
+      "tables": ["User","Session","Company","UserCompany","Application","Role","Permission","RolePermission","RoleAssignment","PlatformAudit"]
+    },
+    {
+      "id": "finance_db",
+      "engine": "postgresql",
+      "ownerService": "finance-api",
+      "container": "finance-postgres",
+      "volume": "finance-postgres-data",
+      "account": "finance_app",
+      "tables": ["LedgerBinding","Document","Project","BankTransaction","Audit","ProcessorConfig"]
+    },
+    {
+      "id": "erp_ledger_db",
+      "engine": "mariadb",
+      "ownerService": "erpnext",
+      "container": "finance-erp-db",
+      "volume": "finance-erp-data",
+      "account": "erp_site_account",
+      "tables": ["Company","Account","Journal Entry","GL Entry","Sales Invoice","Purchase Invoice","Payment Entry","Project"]
+    }
+  ],
+  "externalReferences": [
+    {"from":"finance_db.LedgerBinding.platformCompanyId","to":"platform_db.Company.id","mode":"api-only","crossDatabaseForeignKey":false},
+    {"from":"finance_db.Audit.userId","to":"platform_db.User.id","mode":"stable-id-with-audit-snapshot","crossDatabaseForeignKey":false},
+    {"from":"finance_db.Document.erpName","to":"erp_ledger_db.Journal Entry.name","mode":"erp-api-only","crossDatabaseForeignKey":false}
+  ],
+  "migration": {
+    "preserveUserIds": true,
+    "preserveLegacyLedgerIds": true,
+    "companyIdsFromLegacyTenantIds": true,
+    "revokeLegacySessions": true,
+    "passwordHashesOnly": true
+  }
+}

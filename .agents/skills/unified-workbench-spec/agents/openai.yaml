@@ -1,0 +1,4 @@
+interface:
+  display_name: "统一平台 Spec 执行"
+  short_description: "按需求、任务依赖与真实验收证据推进统一登录平台和乾坤财务子系统"
+  default_prompt: "使用 $unified-workbench-spec 检查当前评审状态，读取下一项可执行任务，并在已获批准的范围内推进。"

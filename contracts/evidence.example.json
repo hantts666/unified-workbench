@@ -1,0 +1,17 @@
+{
+  "exampleOnly": true,
+  "taskId": "T01",
+  "specDigest": "说明：填写 spec:status 输出的实际 SHA-256 指纹",
+  "sourceCommit": "说明：填写被验证源码的实际 Git commit SHA",
+  "executedAt": "说明：填写实际执行时间的 ISO 8601 值",
+  "checks": [
+    {
+      "acceptanceId": "AC26",
+      "status": "passed",
+      "command": "说明：实际执行的验证命令",
+      "exitCode": 0,
+      "report": "说明：脱敏报告的仓库内相对路径",
+      "reportSha256": "说明：报告文件的实际 SHA-256"
+    }
+  ]
+}

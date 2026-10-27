@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/unified-workbench/micro-app.schema.json",
+  "title": "子应用可序列化上下文；导航和订阅函数由 SDK 单独定义",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["applicationCode","basePath","companyId","contextVersion","user","permissionCodes","theme"],
+  "properties": {
+    "applicationCode": {"type":"string","pattern":"^[a-z][a-z0-9-]*$"},
+    "basePath": {"type":"string","pattern":"^/[a-z][a-z0-9-]*$"},
+    "companyId": {"type":"string","minLength":1},
+    "contextVersion": {"type":"integer","minimum":0},
+    "user": {
+      "type":"object",
+      "additionalProperties":false,
+      "required":["id","displayName"],
+      "properties":{"id":{"type":"string","minLength":1},"displayName":{"type":"string","minLength":1}}
+    },
+    "permissionCodes": {"type":"array","uniqueItems":true,"items":{"type":"string","pattern":"^[a-z][a-z0-9-]*:[a-z-]+:[a-z-]+$"}},
+    "theme": {"type":"string","enum":["light","dark"]}
+  }
+}

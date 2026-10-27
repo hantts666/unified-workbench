@@ -1,0 +1,30 @@
+{
+  "name": "unified-workbench",
+  "version": "0.0.0",
+  "private": true,
+  "description": "统一管理平台与乾坤财务子系统：可执行规格及开发准备",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "spec:check": "node scripts/specctl.mjs check",
+    "spec:status": "node scripts/specctl.mjs status",
+    "spec:next": "node scripts/specctl.mjs next",
+    "spec:task": "node scripts/specctl.mjs task",
+    "spec:start": "node scripts/specctl.mjs start",
+    "spec:complete": "node scripts/specctl.mjs complete",
+    "spec:approve": "node scripts/specctl.mjs approve",
+    "acceptance:platform": "node scripts/acceptance.mjs platform",
+    "acceptance:finance": "node scripts/acceptance.mjs finance",
+    "public:audit": "node scripts/public-audit.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm run spec:check && npm test && npm run public:audit"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "13.1.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "yaml": "2.9.1"
+  }
+}

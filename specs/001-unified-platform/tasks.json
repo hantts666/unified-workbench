@@ -1,0 +1,19 @@
+{
+  "specId": "SPEC-001",
+  "tasks": [
+    {"id":"T01","title":"乾坤兼容性 POC 与构建决策","dependsOn":[],"requirementIds":["R24"],"acceptanceIds":["AC26"],"deliverables":["可运行的单页 POC","固定版本及构建方案 ADR","路由、资源路径、生命周期验证报告"],"verification":"对真实浏览器执行挂载、卸载、刷新及资源加载测试，记录 React 与构建工具版本。"},
+    {"id":"T02","title":"平台与子应用契约及 SDK","dependsOn":["T01"],"requirementIds":["R25"],"acceptanceIds":["AC27"],"deliverables":["packages/contracts","packages/platform-sdk","上下文版本、取消切换与订阅协议"],"verification":"新增契约测试覆盖非法上下文、版本变化、订阅解除和无敏感字段；检查 OpenAPI 与实现一致。"},
+    {"id":"T03","title":"独立数据库模型与迁移基础","dependsOn":["T02"],"requirementIds":["R12"],"acceptanceIds":["AC13"],"deliverables":["平台与财务独立 Prisma schema","数据库迁移脚本","独立数据库开发容器"],"verification":"验证不同容器、数据卷与账户；用实际连接尝试跨库查询和写入并确认被拒绝。"},
+    {"id":"T04","title":"统一登录、会话与跨站防护","dependsOn":["T03"],"requirementIds":["R01","R02","R16"],"acceptanceIds":["AC01","AC02","AC03","AC18"],"deliverables":["platform-api 认证模块","统一会话与注销","旧密码哈希验证器","Origin / CSRF 防护"],"verification":"运行平台 HTTP 验收，并新增过期会话、账号停用、密码哈希兼容与限流测试。"},
+    {"id":"T05","title":"用户、公司、应用与授权管理","dependsOn":["T04"],"requirementIds":["R06","R20","R21"],"acceptanceIds":["AC07","AC22","AC23"],"deliverables":["公司成员与应用角色授权","受信应用注册与启停","内部鉴权接口","授权版本与撤权机制"],"verification":"在平台与内部鉴权服务层验证跨应用授权拒绝、敏感操作实时撤权及普通读缓存上限；财务端完整链路由 T08/T10 复核。"},
+    {"id":"T06","title":"主应用 Layout 与平台管理页面","dependsOn":["T02","T05"],"requirementIds":["R07","R20"],"acceptanceIds":["AC08","AC22"],"deliverables":["portal-web","登录、用户、公司、角色和应用管理页面","统一公司切换与导航"],"verification":"真实浏览器验证登录后布局、菜单过滤、用户管理授权与无权限直达页面。"},
+    {"id":"T07","title":"财务微前端拆分与生命周期","dependsOn":["T01","T06"],"requirementIds":["R08","R09","R10","R11"],"acceptanceIds":["AC09","AC10","AC11","AC12"],"deliverables":["finance-web","财务内部路由","样式及弹窗隔离","公司切换和清理机制"],"verification":"新增并运行浏览器测试：20 次切换、慢响应、取消公司切换、直接刷新、前进后退和弹窗卸载。"},
+    {"id":"T08","title":"财务接口接入统一认证与账套映射","dependsOn":["T03","T05"],"requirementIds":["R03","R04","R05","R15","R23"],"acceptanceIds":["AC04","AC05","AC06","AC16","AC17","AC25"],"deliverables":["finance-api 统一鉴权适配","公司账套映射与幂等开账","内部服务凭据范围控制"],"verification":"运行财务 HTTP 验收；故障注入验证认证服务不可用无写入；核对网关不暴露内部接口。"},
+    {"id":"T09","title":"第二子应用样例和独立构建","dependsOn":["T07","T08"],"requirementIds":["R17"],"acceptanceIds":["AC19"],"deliverables":["最小第二子应用样例","各应用独立构建命令","子应用接入说明"],"verification":"平台、财务和样例分别构建发布，验证切换及单个子应用故障时主应用显示可恢复错误。"},
+    {"id":"T10","title":"真实服务鉴权和越权验收","dependsOn":["T07","T08"],"requirementIds":["R01","R02","R03","R04","R05","R15","R16","R21"],"acceptanceIds":["AC01","AC02","AC03","AC04","AC05","AC06","AC16","AC17","AC18","AC23"],"deliverables":["完整 HTTP 鉴权集成用例","虚构测试角色与两家公司 fixture","脱敏测试报告"],"verification":"对真实部署的隔离测试环境运行正向和负向用例，确认拒绝写入后数据库与 ERP 状态均不变。"},
+    {"id":"T11","title":"账号、公司与历史数据迁移演练","dependsOn":["T05","T08"],"requirementIds":["R13","R22"],"acceptanceIds":["AC14","AC24"],"deliverables":["dry-run 与正式迁移工具","ID 映射及数量核对报告","兼容窗口和旧会话清理"],"verification":"在隔离副本中重跑迁移，核对哈希验证、历史引用、审计与幂等；不在公共仓库保存副本。"},
+    {"id":"T12","title":"财务全流程回归","dependsOn":["T07","T08","T11"],"requirementIds":["R14"],"acceptanceIds":["AC15"],"deliverables":["原有财务功能回归测试","真实 ERP 测试账套报告","跨公司、锁期、重复提交失败用例"],"verification":"覆盖上传、审核、草稿、正式提交、项目指标、流水匹配与报表；比较 ERP 借贷合计。"},
+    {"id":"T13","title":"独立 Docker 部署与恢复演练","dependsOn":["T09","T10","T11","T12"],"requirementIds":["R18","R19"],"acceptanceIds":["AC20","AC21"],"deliverables":["platform / finance / edge Compose","备份恢复与兼容回滚工具","公共发布检查和部署说明"],"verification":"隔离恢复数据库、ERP 与附件；演练有新增账务的回滚；扫描镜像和公开文件不含私密资料。"},
+    {"id":"T14","title":"测试环境交付与正式切换准备","dependsOn":["T13"],"requirementIds":["R17","R18","R26"],"acceptanceIds":["AC19","AC20","AC28"],"deliverables":["可使用的测试入口","完整验收证据与使用说明","维护窗口、切换和回滚清单"],"verification":"从干净环境按说明部署并复核主要用户路径，记录已通过、未执行和已知限制；正式迁移按实际授权执行。"}
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "permissions": [
+    {"code":"platform:user:manage","scope":"instance"},
+    {"code":"platform:company:manage","scope":"instance"},
+    {"code":"platform:application:manage","scope":"instance"},
+    {"code":"platform:role:manage","scope":"instance"},
+    {"code":"platform:authorization:manage","scope":"instance"},
+    {"code":"platform:audit:view","scope":"instance"},
+    {"code":"finance:document:view","scope":"company"},
+    {"code":"finance:document:create","scope":"company"},
+    {"code":"finance:document:review","scope":"company"},
+    {"code":"finance:voucher:view","scope":"company"},
+    {"code":"finance:voucher:submit","scope":"company"},
+    {"code":"finance:project:manage","scope":"company"},
+    {"code":"finance:bank:manage","scope":"company"},
+    {"code":"finance:report:view","scope":"company"},
+    {"code":"finance:account:view","scope":"company"},
+    {"code":"finance:ledger:manage","scope":"company"},
+    {"code":"finance:processor:manage","scope":"company"},
+    {"code":"finance:audit:view","scope":"company"}
+  ],
+  "roles": [
+    {"code":"platform-admin","applicationCode":"platform","permissionCodes":["platform:user:manage","platform:company:manage","platform:application:manage","platform:role:manage","platform:authorization:manage","platform:audit:view"]},
+    {"code":"finance-reader","applicationCode":"finance","permissionCodes":["finance:document:view","finance:voucher:view","finance:report:view","finance:account:view"]},
+    {"code":"finance-clerk","applicationCode":"finance","permissionCodes":["finance:document:view","finance:document:create","finance:voucher:view","finance:account:view"]},
+    {"code":"finance-reviewer","applicationCode":"finance","permissionCodes":["finance:document:view","finance:document:review","finance:voucher:view","finance:account:view"]},
+    {"code":"finance-submitter","applicationCode":"finance","permissionCodes":["finance:document:view","finance:voucher:view","finance:voucher:submit","finance:account:view"]}
+  ],
+  "notes": "角色可组合；ledger / processor / bank 等管理权限按实际需要单独授予。平台管理员不自动拥有任何财务权限。RoleAssignment 的公司范围不得省略。"
+}
