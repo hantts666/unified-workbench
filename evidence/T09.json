@@ -1,0 +1,16 @@
+{
+  "taskId": "T09",
+  "specDigest": "96ca49a0f6664f79d07677048e9dd839829dec22cb33df5c2e8dc752b46bcc6b",
+  "sourceCommit": "6d1b1b2324acfbf647e32be0aca98c422a56c294",
+  "executedAt": "2026-10-27T10:54:58.309Z",
+  "checks": [
+    {
+      "acceptanceId": "AC19",
+      "status": "passed",
+      "command": "npm run typecheck; npm run build:portal; npm run build:finance; npm run build:sample; npm run test:sample",
+      "exitCode": 0,
+      "report": "evidence/reports/T09-sample.json",
+      "reportSha256": "bbf5dc608cfe00ca562ebd121b3861fa4f656e8224c2f9f1f6b07dfffda5952e"
+    }
+  ]
+}
