@@ -1,0 +1,38 @@
+{
+  "executedAt": "2026-10-27T10:43:11.470Z",
+  "result": "passed",
+  "snapshotDigest": "5757474ccb8eaf225c984f76de16926e70963759eb27a5aa5ee4459effc7e8c5",
+  "counts": {
+    "users": 2,
+    "companies": 3,
+    "documents": 35,
+    "projects": 3,
+    "transactions": 3,
+    "audits": 106
+  },
+  "erpReplicaTotals": [
+    {
+      "journals": 0,
+      "submitted": 0,
+      "debitCents": 0,
+      "creditCents": 0
+    },
+    {
+      "journals": 14,
+      "submitted": 14,
+      "debitCents": 232402,
+      "creditCents": 232402
+    }
+  ],
+  "checks": [
+    "dry-run leaves scoped target records unchanged",
+    "applied snapshot preserves exact table counts and legacy IDs",
+    "legacy hashes are unchanged and migration creates no sessions",
+    "actual migrated test password works; legacy cookie does not authenticate",
+    "independent ERP restores preserve voucher identities, statuses and balanced totals",
+    "document ERP links and historical audit actors remain intact",
+    "repeat migration is a no-op and preserves records added after the snapshot",
+    "conflicting history is rejected instead of overwriting target data",
+    "every copied attachment passed its original SHA-256 verification"
+  ]
+}
