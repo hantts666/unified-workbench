@@ -16,6 +16,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run db:generate
       - run: npm run check
+      - run: npm run auth:delivery-check
       - run: npm run typecheck
       - run: npm run test:finance-rules
       - run: npm run build:portal

@@ -1,0 +1,125 @@
+{
+  "specId": "SPEC-002",
+  "status": "verified",
+  "sourceCommit": "feea1c171d412c116f99ac610f359f12ee8a42a2",
+  "executedAt": "2026-10-28T06:17:34.182Z",
+  "specDigest": "a2d8414f4658ec646b0e4777b31f3f3d7f3c963d32ff05038568a0f620a1d00d",
+  "approval": "docs/reviews/2026-10-28-auth-approval.md",
+  "implementationDigest": "292f9393be258ca4e0777d4fa5d50c64aebefeee3002e1fed118cf29a45dc42e",
+  "commands": [
+    "node --import tsx tests/auth-security.integration.mjs",
+    "node --import tsx tests/auth-security-browser.integration.mjs",
+    "node --import tsx tests/auth-security-deployed.integration.mjs",
+    "npm run check",
+    "node node_modules/typescript/bin/tsc --noEmit",
+    "node scripts/build-web.mjs portal"
+  ],
+  "requirements": [
+    {
+      "id": "AUTH01",
+      "status": "passed",
+      "reports": [
+        {
+          "file": "evidence/reports/auth-security-api.json",
+          "sha256": "d98cd2f5faba20d4bd6d2ec37ab5058ab67d203d436573995bedc595341be11a"
+        }
+      ]
+    },
+    {
+      "id": "AUTH02",
+      "status": "passed",
+      "reports": [
+        {
+          "file": "evidence/reports/auth-security-api.json",
+          "sha256": "d98cd2f5faba20d4bd6d2ec37ab5058ab67d203d436573995bedc595341be11a"
+        },
+        {
+          "file": "evidence/reports/auth-security-browser.json",
+          "sha256": "7a9ef819bc9a77faf96952f3c68a910b2854c3e992602d3f00e0ac639367b319"
+        },
+        {
+          "file": "evidence/reports/auth-security-deployed.json",
+          "sha256": "5799be957ae04846549b506e6bd4c076e4773cff8f299562e34558b372c89c9a"
+        }
+      ]
+    },
+    {
+      "id": "AUTH03",
+      "status": "passed",
+      "reports": [
+        {
+          "file": "evidence/reports/auth-security-api.json",
+          "sha256": "d98cd2f5faba20d4bd6d2ec37ab5058ab67d203d436573995bedc595341be11a"
+        },
+        {
+          "file": "evidence/reports/auth-security-browser.json",
+          "sha256": "7a9ef819bc9a77faf96952f3c68a910b2854c3e992602d3f00e0ac639367b319"
+        },
+        {
+          "file": "evidence/reports/auth-security-deployed.json",
+          "sha256": "5799be957ae04846549b506e6bd4c076e4773cff8f299562e34558b372c89c9a"
+        }
+      ]
+    },
+    {
+      "id": "AUTH04",
+      "status": "passed",
+      "reports": [
+        {
+          "file": "evidence/reports/auth-security-api.json",
+          "sha256": "d98cd2f5faba20d4bd6d2ec37ab5058ab67d203d436573995bedc595341be11a"
+        },
+        {
+          "file": "evidence/reports/auth-security-deployed.json",
+          "sha256": "5799be957ae04846549b506e6bd4c076e4773cff8f299562e34558b372c89c9a"
+        }
+      ]
+    },
+    {
+      "id": "AUTH05",
+      "status": "passed",
+      "reports": [
+        {
+          "file": "evidence/reports/auth-security-api.json",
+          "sha256": "d98cd2f5faba20d4bd6d2ec37ab5058ab67d203d436573995bedc595341be11a"
+        },
+        {
+          "file": "evidence/reports/auth-security-browser.json",
+          "sha256": "7a9ef819bc9a77faf96952f3c68a910b2854c3e992602d3f00e0ac639367b319"
+        }
+      ]
+    },
+    {
+      "id": "AUTH06",
+      "status": "passed",
+      "reports": [
+        {
+          "file": "evidence/reports/auth-security-browser.json",
+          "sha256": "7a9ef819bc9a77faf96952f3c68a910b2854c3e992602d3f00e0ac639367b319"
+        },
+        {
+          "file": "evidence/reports/auth-security-deployed.json",
+          "sha256": "5799be957ae04846549b506e6bd4c076e4773cff8f299562e34558b372c89c9a"
+        }
+      ]
+    },
+    {
+      "id": "AUTH07",
+      "status": "passed",
+      "reports": [
+        {
+          "file": "evidence/reports/auth-security-api.json",
+          "sha256": "d98cd2f5faba20d4bd6d2ec37ab5058ab67d203d436573995bedc595341be11a"
+        },
+        {
+          "file": "evidence/reports/auth-security-browser.json",
+          "sha256": "7a9ef819bc9a77faf96952f3c68a910b2854c3e992602d3f00e0ac639367b319"
+        },
+        {
+          "file": "evidence/reports/auth-security-deployed.json",
+          "sha256": "5799be957ae04846549b506e6bd4c076e4773cff8f299562e34558b372c89c9a"
+        }
+      ]
+    }
+  ]
+}

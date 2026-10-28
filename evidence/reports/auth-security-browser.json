@@ -1,0 +1,46 @@
+{
+  "executedAt": "2026-10-28T06:02:41.705Z",
+  "result": "passed",
+  "implementationDigest": "292f9393be258ca4e0777d4fa5d50c64aebefeee3002e1fed118cf29a45dc42e",
+  "environment": "real browser, HTTP and isolated PostgreSQL",
+  "browser": "145.0.3800.97",
+  "checks": [
+    {
+      "id": "AUTH06",
+      "description": "deep-link login returns to authorized application after mandatory change; confirmation mismatch blocks submission"
+    },
+    {
+      "id": "AUTH03",
+      "description": "account page lists real devices and revokes other-browser sessions"
+    },
+    {
+      "id": "AUTH06",
+      "description": "logout immediately clears the other tab without exposing tokens in storage"
+    },
+    {
+      "id": "AUTH06",
+      "description": "external return URL is rejected"
+    },
+    {
+      "id": "AUTH06",
+      "description": "a delayed real permission response cannot restore the UI after logout"
+    },
+    {
+      "id": "AUTH05",
+      "description": "company-specific menu hides unauthorized apps and revoked application is unmounted after access refresh"
+    },
+    {
+      "id": "AUTH02",
+      "description": "administrator reset is usable in the UI and forces the affected user back into password setup"
+    },
+    {
+      "id": "AUTH05",
+      "description": "authorization page explains effective permissions and required password change"
+    },
+    {
+      "id": "AUTH07",
+      "description": "real browser paths finish with no page errors"
+    }
+  ],
+  "pageErrors": []
+}

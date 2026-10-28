@@ -1,0 +1,39 @@
+{
+  "executedAt": "2026-10-28T06:15:54.155Z",
+  "result": "passed",
+  "deployedRevision": "feea1c171d412c116f99ac610f359f12ee8a42a2",
+  "implementationDigest": "292f9393be258ca4e0777d4fa5d50c64aebefeee3002e1fed118cf29a45dc42e",
+  "environment": "isolated deployed gateway and real finance service",
+  "checks": [
+    {
+      "id": "AUTH02",
+      "description": "deployed forced-change account cannot access platform business or finance API"
+    },
+    {
+      "id": "AUTH06",
+      "description": "public browser completes mandatory password setup and opens account-security page with no errors"
+    },
+    {
+      "id": "AUTH04",
+      "description": "real deployed finance enforces independent authorization and immediate revocation"
+    },
+    {
+      "id": "AUTH03",
+      "description": "administrator session revocation invalidates both API and public browser sessions"
+    },
+    {
+      "id": "AUTH07",
+      "description": "both deployed API revisions match the release and the original finance entry remains healthy"
+    }
+  ],
+  "pageErrors": [],
+  "migration": {
+    "executedAt": "2026-10-28T06:03:33.223Z",
+    "result": "passed",
+    "checks": [
+      "additive platform migration applied",
+      "existing account IDs, names, password hashes and enabled status preserved",
+      "platform application role can access new throttle table"
+    ]
+  }
+}

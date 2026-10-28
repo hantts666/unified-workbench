@@ -1,11 +1,14 @@
 import fs from 'node:fs';
+import SwaggerParser from '@apidevtools/swagger-parser';
 import {authImplementationDigest} from './lib/auth-evidence.mjs';
+await SwaggerParser.validate('contracts/platform-v03.openapi.json',{resolve:{external:false}});
 const spec=JSON.parse(fs.readFileSync('specs/002-auth-permissions/spec.json','utf8'));
 if(!fs.readFileSync(spec.approval,'utf8').includes('先给我完善其登录和权限相关功能，自己检查自己完善'))throw Error('Missing actual approval record');
 const observed=new Set();
 for(const file of spec.reports){
   const report=JSON.parse(fs.readFileSync(file,'utf8'));
   if(report.result!=='passed'||report.implementationDigest!==authImplementationDigest())throw Error('Missing or stale acceptance: '+file);
+  if(!Number.isFinite(Date.parse(report.executedAt))||Date.parse(report.executedAt)>Date.now()+60000)throw Error('Invalid acceptance timestamp: '+file);
   if(!Array.isArray(report.checks)||report.checks.length===0||report.pageErrors?.length)throw Error('Incomplete acceptance: '+file);
   for(const check of report.checks)observed.add(check.id);
 }
