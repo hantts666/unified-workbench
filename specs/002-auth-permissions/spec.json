@@ -1,0 +1,16 @@
+{
+  "id": "SPEC-002",
+  "title": "登录与权限完善",
+  "approval": "docs/reviews/2026-10-28-auth-approval.md",
+  "baseline": "1907633e3774f2396ebf34f10ba6fa093106e12d",
+  "requirements": [
+    {"id":"AUTH01","title":"真实数据库支持并发登录限流、成功重置计数、来源校验、管理员解锁及审计"},
+    {"id":"AUTH02","title":"初始及重置密码强制修改；验证旧密码、新密码与确认；换密及重置撤销旧会话并阻止并发旧凭据登录"},
+    {"id":"AUTH03","title":"个人安全页显示当前登录及其他设备，支持逐个退出和退出其他设备，禁止访问别人的会话"},
+    {"id":"AUTH04","title":"用户和角色管理不能越权提升访问范围，保留最后管理员，平台管理员不隐式获得财务权限"},
+    {"id":"AUTH05","title":"移除公司成员同时撤销该公司角色；重新加入不恢复旧授权；提供可读的实际权限预览"},
+    {"id":"AUTH06","title":"登录返回合法站内页面，强制换密阻断业务入口，跨标签退出和权限更新及时同步，错误及重复提交有明确处理"},
+    {"id":"AUTH07","title":"真实 HTTP、PostgreSQL 和浏览器验收，更新使用和接口文档，通过检查后同步 GitHub 与独立测试部署并核对版本"}
+  ],
+  "reports": ["evidence/reports/auth-security-api.json", "evidence/reports/auth-security-browser.json", "evidence/reports/auth-security-deployed.json"]
+}

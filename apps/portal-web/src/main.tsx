@@ -33,7 +33,8 @@ import {
   TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { api, write, navigate } from "./api.js";
+import { api, write, navigate, signalSessionChange, safeReturnPath } from "./api.js";
+import {AccountSecurity} from "./account.js";
 import { adminPages, Management } from "./management.js";
 import { MicroWorkspace, type MicroHandle } from "./micro.js";
 import "./style.css";
@@ -89,6 +90,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
             setError("");
             try {
               await write("/auth/login", "POST", values);
+              signalSessionChange();
               onLogin();
             } catch (e: any) {
               setError(e.message);
@@ -131,6 +133,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
             进入工作台 <ArrowRightOutlined />
           </Button>
         </Form>
+        <p>忘记密码或登录受限？请联系平台管理员重置密码或解除限制。</p>
         <p className="portal-login-note">
           <SafetyCertificateOutlined /> 根据你的角色与公司范围开放业务权限
         </p>
@@ -148,17 +151,17 @@ function Portal() {
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
     [path, setPath] = useState(location.pathname),
-    [passwordOpen, setPasswordOpen] = useState(false),
     [switching, setSwitching] = useState(false);
   const micro = useRef<MicroHandle>(null),
     loadVersion = useRef(0);
-  const [passwordForm] = Form.useForm();
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (quiet = false) => {
     const version = ++loadVersion.current;
-    setLoading(true);
+    if(!quiet)setLoading(true);
     setError("");
     try {
       const me = await api("/me");
+      if(version!==loadVersion.current)return;
+      if(me.mustChangePassword){setUser(me);setCompanies([]);setApplications([]);setPermissions([]);return;}
       const [availableCompanies, availableApps, platformPermissions] =
         await Promise.all([
           api("/companies"),
@@ -175,12 +178,12 @@ function Portal() {
           ? previous
           : (availableCompanies[0]?.id ?? ""),
       );
-      if (location.pathname === "/login") navigate("/platform");
+      if (location.pathname === "/login") navigate(safeReturnPath(new URLSearchParams(location.search).get("returnTo")));
     } catch (e: any) {
       if (version !== loadVersion.current) return;
       if (e.status === 401) {
         setUser(null);
-        if (location.pathname !== "/login") navigate("/login");
+        if (location.pathname !== "/login") navigate("/login?returnTo="+encodeURIComponent(safeReturnPath(location.pathname+location.search)));
       } else setError(e.message);
     } finally {
       if (version === loadVersion.current) setLoading(false);
@@ -194,12 +197,27 @@ function Portal() {
       setLoading(false);
       setApplications([]);
       setPermissions([]);
-      navigate("/login");
+      setCompanies([]);
+      setCompanyId("");
+      if(location.pathname!=="/login")navigate("/login?returnTo="+encodeURIComponent(safeReturnPath(location.pathname+location.search)));
     };
     const route = () => setPath(location.pathname);
+    const sync=()=>{void refresh(true);};
+    const storage=(event:StorageEvent)=>{if(event.key==="platform-session-event"||event.key==="platform-access-event")sync();};
+    const access=()=>{try{localStorage.setItem("platform-access-event",String(Date.now()));}catch{}sync();};
+    const timer=window.setInterval(()=>{if(document.visibilityState==="visible")sync();},30000);
+    window.addEventListener("storage",storage);
+    window.addEventListener("focus",sync);
+    window.addEventListener("platform-access-updated",access);
+    window.addEventListener("platform-password-required",sync);
     window.addEventListener("popstate", route);
     window.addEventListener("platform-session-expired", expired);
     return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("storage",storage);
+      window.removeEventListener("focus",sync);
+      window.removeEventListener("platform-access-updated",access);
+      window.removeEventListener("platform-password-required",sync);
       window.removeEventListener("popstate", route);
       window.removeEventListener("platform-session-expired", expired);
     };
@@ -207,9 +225,13 @@ function Portal() {
   const logout = async () => {
     try {
       await write("/auth/logout", "POST");
+      loadVersion.current++;
+      signalSessionChange();
       setUser(null);
       setApplications([]);
       setPermissions([]);
+      setCompanies([]);
+      setCompanyId("");
       navigate("/login");
     } catch (e: any) {
       message.error(e.message);
@@ -229,18 +251,21 @@ function Portal() {
         title="工作台暂时无法连接"
         subTitle={error}
         extra={
-          <Button type="primary" onClick={refresh}>
+          <Button type="primary" onClick={() => void refresh()}>
             重试
           </Button>
         }
       />
     );
   if (!user) return <Login onLogin={() => void refresh()} />;
+  const signedOut=()=>{signalSessionChange();window.dispatchEvent(new Event("platform-session-expired"));};
+  if(user.mustChangePassword)return <main className="portal-forced-password"><AccountSecurity user={user} forced onChanged={signedOut} onLogout={()=>void logout()}/></main>;
+  const visibleApplications=applications.filter(app=>!app.companyIds||app.companyIds.includes(companyId));
   const allowedPages = adminPages.filter((page) =>
     permissions.includes(page.permission),
   );
   const admin = adminPages.find((page) => path === "/platform/" + page.key);
-  const application = applications.find(
+  const application = visibleApplications.find(
     (app) => path === app.activeRule || path.startsWith(app.activeRule + "/"),
   );
   const denied =
@@ -288,8 +313,8 @@ function Portal() {
             <AppstoreOutlined /> 工作台首页
           </button>
           <div className="portal-nav-label">我的应用</div>
-          {applications.length ? (
-            applications.map((app) => (
+          {visibleApplications.length ? (
+            visibleApplications.map((app) => (
               <button
                 aria-label={app.name}
                 key={app.code}
@@ -350,7 +375,7 @@ function Portal() {
             <Button
               type="text"
               icon={<ReloadOutlined />}
-              onClick={refresh}
+              onClick={() => void refresh()}
               aria-label="刷新权限"
             />
             <Dropdown
@@ -360,7 +385,7 @@ function Portal() {
                   {
                     key: "password",
                     icon: <LockOutlined />,
-                    label: "修改密码",
+                    label: "账号安全",
                   },
                   { type: "divider" },
                   {
@@ -370,7 +395,7 @@ function Portal() {
                   },
                 ],
                 onClick: ({ key }) =>
-                  key === "logout" ? void logout() : setPasswordOpen(true),
+                  key === "logout" ? void logout() : navigate("/platform/account"),
               }}
             >
               <Button type="text">
@@ -393,11 +418,12 @@ function Portal() {
                 </Button>
               }
             />
-          ) : admin ? (
+          ) : path === "/platform/account" ? (<AccountSecurity user={user} onChanged={signedOut} onLogout={()=>void logout()}/>) : admin ? (
             <Management key={admin.key} section={admin.key} />
           ) : application ? (
             companyId ? (
               <MicroWorkspace
+                key={user.id+":"+user.authzVersion+":"+application.version+":"+company?.version}
                 ref={micro}
                 application={application}
                 companyId={companyId}
@@ -427,10 +453,10 @@ function Portal() {
                   <h2>我的业务应用</h2>
                   <p>选择应用，开始今天的工作</p>
                 </div>
-                <Tag color="green">{applications.length} 个已授权应用</Tag>
+                <Tag color="green">{visibleApplications.length} 个已授权应用</Tag>
               </div>
               <div className="portal-app-grid">
-                {applications.map((app, index) => (
+                {visibleApplications.map((app, index) => (
                   <button
                     className="portal-app-card"
                     key={app.code}
@@ -451,7 +477,7 @@ function Portal() {
                   </button>
                 ))}
               </div>
-              {!applications.length && (
+              {!visibleApplications.length && (
                 <section className="portal-card">
                   <Empty description="暂无业务应用权限" />
                   <p className="portal-centered-note">
@@ -494,52 +520,7 @@ function Portal() {
           合一工作台 · 让业务各司其职，让协作连接起来
         </footer>
       </div>
-      <Modal
-        open={passwordOpen}
-        title="修改密码"
-        onCancel={() => setPasswordOpen(false)}
-        onOk={() => passwordForm.submit()}
-        destroyOnHidden
-      >
-        <Alert
-          type="info"
-          message="修改后所有设备会退出，请使用新密码重新登录。"
-        />
-        <Form
-          form={passwordForm}
-          layout="vertical"
-          onFinish={async (values) => {
-            try {
-              await write("/auth/password", "POST", values);
-              setPasswordOpen(false);
-              passwordForm.resetFields();
-              setUser(null);
-              navigate("/login");
-              message.success("密码已更新，请重新登录");
-            } catch (e: any) {
-              message.error(e.message);
-            }
-          }}
-        >
-          <Form.Item
-            label="当前密码"
-            name="current"
-            rules={[{ required: true }]}
-          >
-            <Input.Password autoComplete="current-password" />
-          </Form.Item>
-          <Form.Item
-            label="新密码"
-            name="next"
-            rules={[
-              { required: true },
-              { min: 12, message: "密码至少 12 个字符" },
-            ]}
-          >
-            <Input.Password autoComplete="new-password" />
-          </Form.Item>
-        </Form>
-      </Modal>
+
     </div>
   );
 }

@@ -8,6 +8,7 @@
 2. 业务开发使用 `.agents/skills/unified-workbench-spec/SKILL.md`。需求与验收以 `specs/001-unified-platform/spec.json` 为结构化来源，技术决策见同目录 `plan.md`。
 3. 用户已在 `docs/reviews/2026-10-27-approval.md` 明确批准开始实施，并要求定期同步 GitHub 与服务器。按已批准任务推进，不要再次询问是否开工；审批记录必须来自真实用户指令。
 4. 获批后按 `spec:next` 选择依赖满足的任务，用 `spec:start -- Txx` 登记。任务定义与执行状态分离；需求变更后重核审批指纹。
+5. 2026-10-28 的登录与权限完善已获用户批准，增量规格见 `specs/002-auth-permissions/spec.json`，执行及发布约定见 `docs/AUTH-SECURITY.md`。SPEC-001 保留为已交付基线；本轮交付另需 `npm run auth:delivery-check` 核对真实验收及实现指纹，不改写历史证据。
 
 ## 执行边界
 

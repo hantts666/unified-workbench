@@ -143,6 +143,10 @@ export function Management({ section }: { section: PageKey }) {
         <Button type="link" onClick={() => edit(item)}>
           编辑
         </Button>
+        {section==='users'&&<>
+          <Popconfirm title="解除此账号的密码尝试限制？来源地址限制会自动到期。" onConfirm={async()=>{try{await write('/users/'+item.id+'/unlock','POST');message.success('账号登录限制已解除');}catch(e:any){message.error(e.message);}}}><Button type="link">解除限制</Button></Popconfirm>
+          <Popconfirm title="退出此账号的全部登录设备？" onConfirm={async()=>{try{await write('/users/'+item.id+'/revoke-sessions','POST');message.success('所有登录设备已退出');}catch(e:any){message.error(e.message);}}}><Button type="link" danger>退出全部设备</Button></Popconfirm>
+        </>}
         {!(section === "applications" && item.code === "platform") && (
           <Popconfirm
             title={
@@ -165,6 +169,8 @@ export function Management({ section }: { section: PageKey }) {
       ? [
           { title: "姓名", dataIndex: "displayName" },
           { title: "账号", dataIndex: "account" },
+          {title:'密码状态',render:(_:any,u:any)=><Tag color={u.mustChangePassword?'orange':'green'}>{u.mustChangePassword?'待修改密码':'已设置'}</Tag>},
+          {title:'最近登录',dataIndex:'lastLoginAt',render:(v:string)=>v?new Date(v).toLocaleString('zh-CN'):'尚未登录'},
           activeColumn,
           operations,
         ]
@@ -219,6 +225,7 @@ export function Management({ section }: { section: PageKey }) {
                 { title: "操作人 ID", dataIndex: "actorId" },
               ];
   const save = async (values: any) => {
+    if(saving)return;
     setSaving(true);
     try {
       let body: any;
@@ -338,6 +345,8 @@ export function Management({ section }: { section: PageKey }) {
               >
                 <Input.Password autoComplete="new-password" />
               </Form.Item>
+              <Form.Item name="confirmPassword" label="确认密码" dependencies={['password']} rules={[({getFieldValue})=>({validator(_,value){return (!getFieldValue('password')&&!value)||value===getFieldValue('password')?Promise.resolve():Promise.reject(new Error('两次输入的密码不一致'));}})]}><Input.Password autoComplete="new-password"/></Form.Item>
+              <Alert type="info" showIcon message="新建或重置密码后，用户需先修改密码才能使用业务功能；重置会退出全部设备。"/>
             </>
           ) : (
             <Form.Item name="name" label="名称" rules={[{ required: true }]}>
@@ -491,7 +500,8 @@ function AccessManagement() {
             aria-label="选择用户"
             placeholder="选择需要授权的用户"
             value={selected}
-            onChange={setSelected}
+            disabled={busy}
+            onChange={value=>{setSelected(value);setRoleId(undefined);setCompanyId(undefined);setError('');}}
             showSearch
             optionFilterProp="label"
             style={{ width: 320 }}
@@ -504,7 +514,7 @@ function AccessManagement() {
             <div className="portal-access-grid">
               <section className="portal-card">
                 <h2>1. 可用公司</h2>
-                <p>加入公司后，仍需分配对应的应用角色。</p>
+                <p>加入公司后需分配角色。移除公司会同时撤销该公司的全部角色，再次加入需重新授权。</p>
                 <Checkbox.Group
                   className="portal-permission-grid"
                   value={companyIds}
@@ -514,19 +524,14 @@ function AccessManagement() {
                     label: c.name,
                   }))}
                 />
+                <Popconfirm title="保存公司范围？被移除公司的全部角色也将撤销。" onConfirm={()=>run(()=>write(`/users/${selected}/companies`,'PUT',{companyIds}))}>
                 <Button
                   loading={busy}
                   type="primary"
-                  onClick={() =>
-                    run(() =>
-                      write(`/users/${selected}/companies`, "PUT", {
-                        companyIds,
-                      }),
-                    )
-                  }
                 >
                   保存公司范围
                 </Button>
+                </Popconfirm>
               </section>
               <section className="portal-card">
                 <h2>2. 应用角色</h2>
@@ -578,6 +583,12 @@ function AccessManagement() {
                     添加角色授权
                   </Button>
                 </Space>
+              </section>
+              <section className="portal-card portal-access-table">
+                <h2>实际生效权限</h2>
+                {!access.user?.active&&<Alert type="warning" message="账号已停用，所有权限均不生效。"/>}
+                {access.user?.mustChangePassword&&<Alert type="warning" message="用户需要先修改密码，之后授权才可使用。"/>}
+                {access.effectiveAccess?.length?access.effectiveAccess.map((scope:any)=><div key={scope.applicationCode+':'+scope.companyId}><h3>{appNames[scope.applicationCode]} · {scope.companyId?(options.companies.find((c:any)=>c.id===scope.companyId)?.name??'已停用公司'):'整个平台'}</h3><Space wrap>{scope.permissionCodes.map((code:string)=><Tag key={code}>{permissionNames[code]??code}</Tag>)}</Space></div>):<Empty description="当前没有生效的操作权限"/>}
               </section>
               <section className="portal-card portal-access-table">
                 <h2>当前角色授权</h2>

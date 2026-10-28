@@ -6,7 +6,7 @@ root=Path(a.root).resolve();out=Path(a.output).resolve()
 if not out.is_relative_to(root/'private') or out.exists():raise SystemExit('Choose a new private backup directory under this project')
 os.umask(0o077);out.mkdir(parents=True)
 def docker(*args,**kwargs):return subprocess.run(['sudo','docker',*args],check=True,**kwargs)
-stopped=[];tables={'platform':['User','Session','Company','UserCompany','Application','Permission','Role','RolePermission','RoleAssignment','PlatformAudit'],'finance':['LedgerBinding','Document','Project','BankTransaction','Audit','ProcessorConfig']}
+stopped=[];tables={'platform':['User','Session','Company','UserCompany','Application','Permission','Role','RolePermission','RoleAssignment','PlatformAudit','AuthThrottle'],'finance':['LedgerBinding','Document','Project','BankTransaction','Audit','ProcessorConfig']}
 def summary(kind):
     records={}
     for table in tables[kind]:

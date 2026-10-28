@@ -1,0 +1,866 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Unified Workbench 边界接口契约",
+    "version": "0.3.0",
+    "description": "当前登录与权限接口；SPEC-001 契约作为历史基线保留。"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "platformSession": []
+    }
+  ],
+  "paths": {
+    "/api/platform/auth/login": {
+      "post": {
+        "operationId": "login",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "设置 HttpOnly 会话 Cookie，返回用户摘要",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "登录限流"
+          }
+        }
+      }
+    },
+    "/api/platform/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "会话失效并清除 Cookie"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/platform/me": {
+      "get": {
+        "operationId": "getMe",
+        "responses": {
+          "200": {
+            "description": "当前用户摘要",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/platform/applications": {
+      "get": {
+        "operationId": "listApplications",
+        "responses": {
+          "200": {
+            "description": "用户已获授权且启用的受信应用列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Application"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/platform/companies": {
+      "get": {
+        "operationId": "listCompanies",
+        "responses": {
+          "200": {
+            "description": "用户可访问公司列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Company"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/platform/permissions": {
+      "get": {
+        "operationId": "getPermissions",
+        "parameters": [
+          {
+            "name": "applicationCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "companyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "用于显示的有效操作权限，服务端仍独立校验",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/internal/auth/introspect": {
+      "post": {
+        "operationId": "introspectSession",
+        "description": "仅内网，网关禁止路由；服务凭据仅可请求其已授权的 applicationCode。敏感写实时鉴权。",
+        "security": [
+          {
+            "serviceCredential": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "sessionToken",
+                  "applicationCode",
+                  "companyId",
+                  "permissionCode"
+                ],
+                "properties": {
+                  "sessionToken": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "applicationCode": {
+                    "type": "string"
+                  },
+                  "companyId": {
+                    "type": "string"
+                  },
+                  "permissionCode": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "会话及指定操作的鉴权结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationDecision"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/finance/companies/{companyId}/documents": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/CompanyId"
+        }
+      ],
+      "get": {
+        "operationId": "listFinanceDocuments",
+        "x-permission": "finance:document:view",
+        "responses": {
+          "200": {
+            "description": "当前公司单据列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/finance/companies/{companyId}/documents/{documentId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/CompanyId"
+        },
+        {
+          "$ref": "#/components/parameters/DocumentId"
+        }
+      ],
+      "get": {
+        "operationId": "getFinanceDocument",
+        "x-permission": "finance:document:view",
+        "responses": {
+          "200": {
+            "description": "当前公司单据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "不存在或资源不属于授权公司"
+          }
+        }
+      }
+    },
+    "/api/finance/companies/{companyId}/documents/{documentId}/submit": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/CompanyId"
+        },
+        {
+          "$ref": "#/components/parameters/DocumentId"
+        }
+      ],
+      "post": {
+        "operationId": "submitFinanceDocument",
+        "x-permission": "finance:voucher:submit",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "confirmation"
+                ],
+                "properties": {
+                  "confirmation": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已提交的 ERP 凭证引用"
+          },
+          "400": {
+            "description": "状态、分录或确认内容不符合财务规则"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "单据不在授权公司"
+          },
+          "503": {
+            "description": "鉴权不可用，拒绝写入"
+          }
+        }
+      }
+    },
+    "/api/platform/auth/password": {
+      "post": {
+        "operationId": "changeOwnPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "current",
+                  "next"
+                ],
+                "properties": {
+                  "current": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "writeOnly": true
+                  },
+                  "next": {
+                    "type": "string",
+                    "minLength": 12,
+                    "maxLength": 200,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "操作完成"
+          },
+          "400": {
+            "description": "输入不正确"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "description": "并发修改、最后管理员或其他状态冲突"
+          },
+          "429": {
+            "description": "尝试过多；Retry-After 为等待秒数"
+          }
+        }
+      }
+    },
+    "/api/platform/auth/sessions": {
+      "get": {
+        "operationId": "listOwnLoginDevices",
+        "responses": {
+          "200": {
+            "description": "仅当前用户的有效登录；不返回认证令牌或其摘要",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LoginDevice"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/platform/auth/sessions/revoke-others": {
+      "post": {
+        "operationId": "revokeOtherSessions",
+        "responses": {
+          "204": {
+            "description": "操作完成"
+          },
+          "400": {
+            "description": "输入不正确"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "description": "并发修改、最后管理员或其他状态冲突"
+          },
+          "429": {
+            "description": "尝试过多；Retry-After 为等待秒数"
+          }
+        }
+      }
+    },
+    "/api/platform/auth/sessions/{id}": {
+      "delete": {
+        "operationId": "revokeOwnSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "操作完成"
+          },
+          "400": {
+            "description": "输入不正确"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "会话不存在或不属于当前用户"
+          },
+          "409": {
+            "description": "并发修改、最后管理员或其他状态冲突"
+          },
+          "429": {
+            "description": "尝试过多；Retry-After 为等待秒数"
+          }
+        }
+      }
+    },
+    "/api/platform/users/{id}/unlock": {
+      "post": {
+        "operationId": "unlockUserLogin",
+        "x-permission": "platform:user:manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "操作完成"
+          },
+          "400": {
+            "description": "输入不正确"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "description": "并发修改、最后管理员或其他状态冲突"
+          },
+          "429": {
+            "description": "尝试过多；Retry-After 为等待秒数"
+          }
+        }
+      }
+    },
+    "/api/platform/users/{id}/revoke-sessions": {
+      "post": {
+        "operationId": "revokeUserSessions",
+        "x-permission": "platform:user:manage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "操作完成"
+          },
+          "400": {
+            "description": "输入不正确"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "description": "并发修改、最后管理员或其他状态冲突"
+          },
+          "429": {
+            "description": "尝试过多；Retry-After 为等待秒数"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "platformSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "platform_session"
+      },
+      "serviceCredential": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "仅服务器持有，按调用服务和应用限制范围"
+      }
+    },
+    "parameters": {
+      "CompanyId": {
+        "name": "companyId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "DocumentId": {
+        "name": "documentId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "缺少或失效的会话 / 服务凭据",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "操作、应用或公司未授权 / 跨站请求被拒绝",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "LoginInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "account",
+          "password"
+        ],
+        "properties": {
+          "account": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "writeOnly": true
+          }
+        }
+      },
+      "UserSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "displayName"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "Company": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "active"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "Application": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "name",
+          "activeRule",
+          "entry"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "activeRule": {
+            "type": "string"
+          },
+          "entry": {
+            "type": "string",
+            "pattern": "^/micro/"
+          },
+          "companyIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "AuthorizationDecision": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "active",
+          "allowed"
+        ],
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "allowed": {
+            "type": "boolean"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "applicationCode": {
+            "type": "string"
+          },
+          "authzVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sessionExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "UserDetails": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "account",
+          "displayName",
+          "authzVersion",
+          "mustChangePassword",
+          "lastLoginAt",
+          "sessionExpiresAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "authzVersion": {
+            "type": "integer"
+          },
+          "mustChangePassword": {
+            "type": "boolean"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "sessionExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "LoginDevice": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "userAgent",
+          "createdAt",
+          "expiresAt",
+          "current"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userAgent": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "current": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

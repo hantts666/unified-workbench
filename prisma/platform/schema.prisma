@@ -14,6 +14,8 @@ model User {
   passwordHash String
   active Boolean @default(true)
   authzVersion Int @default(1)
+  mustChangePassword Boolean @default(false)
+  lastLoginAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   sessions Session[]
@@ -22,6 +24,8 @@ model User {
 }
 model Session {
   tokenHash String @id
+  id String @unique @default(uuid())
+  userAgent String @default("")
   userId String
   user User @relation(fields:[userId], references:[id], onDelete:Cascade)
   expiresAt DateTime
@@ -113,4 +117,11 @@ model PlatformAudit {
   detail Json
   createdAt DateTime @default(now())
   @@index([actorId, createdAt])
+}
+
+model AuthThrottle {
+  key String @id
+  attempts Int
+  expiresAt DateTime
+  @@index([expiresAt])
 }

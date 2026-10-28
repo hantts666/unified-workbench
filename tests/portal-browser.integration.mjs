@@ -49,7 +49,7 @@ try {
   await page.getByLabel("账号", { exact: true }).fill(admin.account);
   await page.getByLabel("密码", { exact: true }).fill(password);
   await page.getByRole("button", { name: "进入工作台" }).click();
-  await page.getByRole("heading", { name: "你好，平台管理员" }).waitFor();
+  await page.getByRole("heading", { name: "用户管理", exact: true }).waitFor();
   assert.equal(
     await page
       .getByRole("navigation")
@@ -73,6 +73,7 @@ try {
   await page.getByLabel("姓名", { exact: true }).fill("门户只读验收成员");
   await page.getByLabel("账号", { exact: true }).fill(prefix + "-reader");
   await page.getByLabel("初始密码", { exact: true }).fill(password);
+  await page.getByLabel("确认密码", { exact: true }).fill(password);
   await page.getByRole("dialog").getByRole("button", { name: "确 定" }).click();
   await page.getByRole("dialog").waitFor({ state: "hidden" });
   await page
@@ -112,6 +113,7 @@ try {
     .getByRole("checkbox", { name: prefix + " 示例公司", exact: true })
     .check();
   await page.getByRole("button", { name: "保存公司范围" }).click();
+  await page.getByRole("button", { name: "确 定", exact: true }).click();
   await page.getByText("授权已更新，即时生效").first().waitFor();
   await page.getByRole("combobox", { name: "选择角色" }).click();
   await page
@@ -133,6 +135,14 @@ try {
   await page.getByLabel("账号", { exact: true }).fill(prefix + "-reader");
   await page.getByLabel("密码", { exact: true }).fill(password);
   await page.getByRole("button", { name: "进入工作台" }).click();
+  await page.getByRole("heading", {name:"请先设置自己的密码"}).waitFor();
+  await page.getByLabel("当前密码",{exact:true}).fill(password);
+  await page.getByLabel("新密码",{exact:true}).fill(password+"-changed");
+  await page.getByLabel("确认新密码",{exact:true}).fill(password+"-changed");
+  await page.getByRole("button",{name:"保存新密码"}).click();
+  await page.getByLabel("账号",{exact:true}).fill(prefix+"-reader");
+  await page.getByLabel("密码",{exact:true}).fill(password+"-changed");
+  await page.getByRole("button",{name:"进入工作台"}).click();
   await page.getByRole("heading", { name: "你好，门户只读验收成员" }).waitFor();
   await page
     .getByRole("navigation")

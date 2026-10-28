@@ -2,6 +2,7 @@ export class HttpError extends Error {
   constructor(
     public status: number,
     message: string,
+    public code?: string,
   ) {
     super(message);
   }
@@ -19,15 +20,26 @@ export async function api<T = any>(
   if (!response.ok) {
     if (response.status === 401 && !path.startsWith("/auth/login"))
       window.dispatchEvent(new Event("platform-session-expired"));
-    throw new HttpError(response.status, result?.message ?? "请求失败");
+    if(result?.code==='PASSWORD_CHANGE_REQUIRED')window.dispatchEvent(new Event('platform-password-required'));
+    throw new HttpError(response.status, result?.message ?? "请求失败",result?.code);
   }
   return result;
 }
-export const write = (path: string, method: string, body?: unknown) =>
-  api(path, {
+export const write = async (path: string, method: string, body?: unknown) => {
+  const result=await api(path, {
     method,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+  if(!path.startsWith('/auth/'))window.dispatchEvent(new Event('platform-access-updated'));
+  return result;
+};
+export function signalSessionChange(){
+  try{localStorage.setItem('platform-session-event',String(Date.now()));}catch{}
+}
+export function safeReturnPath(value:string|null){
+  if(!value||!/^\/(platform|finance|sample)(\/|$|\?)/.test(value)||value.includes('\\'))return '/platform';
+  try{const url=new URL(value,location.origin);return url.origin===location.origin&&/^\/(platform|finance|sample)(\/|$)/.test(url.pathname)?url.pathname+url.search:'/platform';}catch{return '/platform';}
+}
 export function navigate(path: string) {
   if (!path.startsWith("/") || path.startsWith("//"))
     throw new Error("无效页面");

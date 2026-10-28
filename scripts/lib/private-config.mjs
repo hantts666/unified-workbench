@@ -15,5 +15,9 @@ export function databaseUrl(kind,owner=false,config=privateConfig()) {
   const url=new URL(`postgresql://${host}:${port}/${kind}`);url.username=role;url.password=password;
   // Keep test connections bounded across an SSH tunnel; application deployment sets its own pool.
   url.searchParams.set('connection_limit','3');url.searchParams.set('connect_timeout','15');
+  if(kind==='platform'&&process.env.PLATFORM_TEST_SCHEMA){
+    if(!/^auth_test_[a-z0-9_]+$/.test(process.env.PLATFORM_TEST_SCHEMA))throw new Error('Invalid isolated auth test schema');
+    url.searchParams.set('schema',process.env.PLATFORM_TEST_SCHEMA);
+  }
   return url.href;
 }

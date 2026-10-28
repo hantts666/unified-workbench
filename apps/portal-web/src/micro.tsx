@@ -66,7 +66,7 @@ export const MicroWorkspace = forwardRef<
           basePath: application.activeRule,
           companyId,
           contextVersion: 0,
-          user,
+          user:{id:user.id,displayName:user.displayName},
           permissionCodes: permissions,
           theme: "light",
         });

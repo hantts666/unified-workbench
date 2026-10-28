@@ -16,6 +16,7 @@ class PlatformModule {}
 Module({})(PlatformModule);
 export async function createPlatformApp(){
   const app=await NestFactory.create(PlatformModule,{logger:false,bodyParser:false});
+  app.getHttpAdapter().getInstance().set('trust proxy',process.env.TRUST_PROXY==='1'?1:false);
   app.use(helmet({contentSecurityPolicy:false}));
   app.use(express.json({limit:'200kb'}));app.use(cookieParser());
   app.use((_req:any,res:any,next:any)=>{res.setHeader('Cache-Control','no-store');next();});

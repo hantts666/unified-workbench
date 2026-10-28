@@ -6,6 +6,8 @@ V0.2 将统一平台与财务子系统拆分部署。阶段进度以 `npm run sp
 
 使用入口：[使用教程](docs/USER-GUIDE.md) · [部署和恢复](docs/DEPLOYMENT.md) · [数据库表结构](docs/DATABASE.md) · [新应用接入](docs/APPLICATION-INTEGRATION.md) · [已知限制](docs/KNOWN-LIMITATIONS.md)。
 
+登录与权限完善：[本轮行为和验收](docs/AUTH-SECURITY.md) · [增量规格](specs/002-auth-permissions/spec.json) · [当前平台接口](contracts/platform-v03.openapi.json)。历史 SPEC-001 的完成状态不能替代本轮 `npm run auth:delivery-check`。
+
 ## 先看这三份文件
 
 1. [评审入口](docs/REVIEW.md)：范围、主要决策、实施阶段和待审事项。

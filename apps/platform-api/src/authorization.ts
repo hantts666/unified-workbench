@@ -6,19 +6,19 @@ import {sameSecret} from './security.js';
 import {ApiFailure,route} from './http.js';
 import {trustedApplications} from '../../../packages/contracts/applications.js';
 
-export async function effectivePermissions(userId:string,applicationCode:string,companyId:string|null){
-  const application=await db.application.findUnique({where:{code:applicationCode}});
-  const user=await db.user.findUnique({where:{id:userId}});
-  if(!application?.active||!user?.active)return [];
+export async function effectivePermissions(userId:string,applicationCode:string,companyId:string|null,client:any=db):Promise<string[]>{
+  const application=await client.application.findUnique({where:{code:applicationCode}});
+  const user=await client.user.findUnique({where:{id:userId}});
+  if(!application?.active||!user?.active||user.mustChangePassword)return [];
   const definition=trustedApplications[applicationCode as keyof typeof trustedApplications];
   if(!definition)return [];
   if(definition.scopeType==='company'){
     if(!companyId)return [];
-    const member=await db.userCompany.findUnique({where:{userId_companyId:{userId,companyId}},include:{company:true}});
+    const member=await client.userCompany.findUnique({where:{userId_companyId:{userId,companyId}},include:{company:true}});
     if(!member?.active||!member.company.active)return [];
   }
-  const assignments=await db.roleAssignment.findMany({where:{userId,applicationId:application.id,scopeType:definition.scopeType,companyId:definition.scopeType==='instance'?null:companyId,role:{active:true}},include:{role:{include:{permissions:{include:{permission:true}}}}}});
-  return [...new Set(assignments.flatMap(assignment=>assignment.role.permissions.map(item=>item.permission.code)))].sort();
+  const assignments=await client.roleAssignment.findMany({where:{userId,applicationId:application.id,scopeType:definition.scopeType,companyId:definition.scopeType==='instance'?null:companyId,role:{active:true}},include:{role:{include:{permissions:{include:{permission:true}}}}}});
+  return [...new Set<string>(assignments.flatMap((assignment:any)=>assignment.role.permissions.map((item:any)=>item.permission.code)))].sort();
 }
 export function requirePermission(permission:string){
   return (req:Request,res:Response,next:NextFunction)=>{

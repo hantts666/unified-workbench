@@ -6,15 +6,23 @@ import {effectivePermissions,requirePermission} from './authorization.js';
 import {passwordHash} from './security.js';
 import {ApiFailure,route} from './http.js';
 import {trustedApplications} from '../../../packages/contracts/applications.js';
+import {protectUser,protectRole} from './admin-safety.js';
+import {throttleKey} from './throttle.js';
 
-const userFields={id:true,account:true,displayName:true,active:true,createdAt:true,authzVersion:true} as const;
+const userFields={id:true,account:true,displayName:true,active:true,createdAt:true,authzVersion:true,mustChangePassword:true,lastLoginAt:true} as const;
 const companyFields={id:true,name:true,abbreviation:true,taxId:true,active:true,version:true} as const;
 const auditData=(actorId:string,action:string,resourceType:string,resourceId:string,detail:object={})=>({actorId,action,resourceType,resourceId,detail});
 const permissionInput=z.array(z.string().min(1)).max(100);
 const registryCode=z.enum(['platform','finance','sample']);
 async function ensureAdministrator(tx:any){
-  const count=await tx.roleAssignment.count({where:{scopeType:'instance',applicationId:'platform',user:{active:true},role:{active:true,permissions:{some:{permission:{code:'platform:authorization:manage'}}}}}});
-  if(!count)throw new ApiFailure(409,'LAST_ADMIN','至少保留一个可以管理授权的平台管理员');
+  const administrators=await tx.$queryRaw`
+    SELECT ra."userId" FROM "RoleAssignment" ra
+    JOIN "User" u ON u.id=ra."userId" JOIN "Role" r ON r.id=ra."roleId"
+    JOIN "RolePermission" rp ON rp."roleId"=r.id JOIN "Permission" p ON p.id=rp."permissionId"
+    WHERE ra."applicationId"='platform' AND ra."scopeType"='instance' AND ra."companyId" IS NULL AND u.active AND r.active
+      AND p.code IN ('platform:user:manage','platform:role:manage','platform:authorization:manage','platform:application:manage','platform:company:manage','platform:audit:view')
+    GROUP BY ra."userId" HAVING COUNT(DISTINCT p.code)=6 LIMIT 1`;
+  if(!administrators.length)throw new ApiFailure(409,'LAST_ADMIN','至少保留一个具备完整平台管理权限的有效管理员');
 }
 async function validateRolePermissions(applicationId:string,codes:string[]){
   const definition=trustedApplications[applicationId as keyof typeof trustedApplications];
@@ -25,7 +33,7 @@ async function validateRolePermissions(applicationId:string,codes:string[]){
 }
 export function registerManagement(router:Router){
   router.use(requireSession);
-  router.get('/companies',route(async(req,res)=>res.json(await db.company.findMany({where:{active:true,members:{some:{userId:req.identity.user.id,active:true}}},select:{id:true,name:true,active:true},orderBy:{name:'asc'}}))));
+  router.get('/companies',route(async(req,res)=>res.json(await db.company.findMany({where:{active:true,members:{some:{userId:req.identity.user.id,active:true}}},select:{id:true,name:true,active:true,version:true},orderBy:{name:'asc'}}))));
   router.get('/permissions',route(async(req,res)=>{
     const input=z.object({applicationCode:z.string(),companyId:z.string()}).parse(req.query);
     res.json(await effectivePermissions(req.identity.user.id,input.applicationCode,input.companyId));
@@ -37,7 +45,9 @@ export function registerManagement(router:Router){
     for(const application of applications){
       const definition=trustedApplications[application.code as keyof typeof trustedApplications];
       if(!definition)continue;
-      for(const member of companies){if((await effectivePermissions(req.identity.user.id,application.code,member.companyId)).length){result.push({code:application.code,name:application.name,activeRule:definition.activeRule,entry:definition.entry});break;}}
+      const companyIds=[];
+      for(const member of companies){if((await effectivePermissions(req.identity.user.id,application.code,member.companyId)).length)companyIds.push(member.companyId);}
+      if(companyIds.length)result.push({code:application.code,name:application.name,activeRule:definition.activeRule,entry:definition.entry,companyIds,version:application.version});
     }
     res.json(result);
   }));
@@ -45,17 +55,37 @@ export function registerManagement(router:Router){
   router.post('/users',requirePermission('platform:user:manage'),route(async(req,res)=>{
     const input=z.object({account:z.string().trim().min(1).max(200),displayName:z.string().trim().min(1).max(100),password:z.string().min(12).max(200)}).strict().parse(req.body);
     const result=await db.$transaction(async tx=>{
-      const user=await tx.user.create({data:{account:input.account.toLowerCase(),displayName:input.displayName,passwordHash:await passwordHash(input.password)},select:userFields});
+      const user=await tx.user.create({data:{account:input.account.toLowerCase(),displayName:input.displayName,passwordHash:await passwordHash(input.password),mustChangePassword:true},select:userFields});
       await tx.platformAudit.create({data:auditData(req.identity.user.id,'USER_CREATE','user',user.id)});return user;
     });res.status(201).json(result);
   }));
   router.patch('/users/:id',requirePermission('platform:user:manage'),route(async(req,res)=>{
     const input=z.object({displayName:z.string().trim().min(1).max(100).optional(),active:z.boolean().optional(),password:z.string().min(12).max(200).optional()}).strict().parse(req.body);
+    if(input.password&&req.params.id===req.identity.user.id)throw new ApiFailure(400,'USE_PASSWORD_CHANGE','修改自己的密码请使用账号安全中的修改密码');
+    const resetHash=input.password?await passwordHash(input.password):undefined;
     const updated=await db.$transaction(async tx=>{
-      const user=await tx.user.update({where:{id:req.params.id},data:{displayName:input.displayName,active:input.active,...(input.password?{passwordHash:await passwordHash(input.password)}:{}),authzVersion:{increment:1}},select:userFields});
+      await protectUser(tx,req.identity.user.id,req.params.id);
+      const user=await tx.user.update({where:{id:req.params.id},data:{displayName:input.displayName,active:input.active,...(resetHash?{passwordHash:resetHash,mustChangePassword:true}:{}),authzVersion:{increment:1}},select:userFields});
       if(input.active===false||input.password)await tx.session.updateMany({where:{userId:user.id,revokedAt:null},data:{revokedAt:new Date()}});
+      if(input.password)await tx.authThrottle.deleteMany({where:{key:{in:[throttleKey('login-account',user.account),throttleKey('password-change',user.id)]}}});
       await ensureAdministrator(tx);await tx.platformAudit.create({data:auditData(req.identity.user.id,'USER_UPDATE','user',user.id,{fields:Object.keys(input)})});return user;
     },{isolationLevel:'Serializable'});res.json(updated);
+  }));
+  router.post('/users/:id/unlock',requirePermission('platform:user:manage'),route(async(req,res)=>{
+    await db.$transaction(async tx=>{
+      await protectUser(tx,req.identity.user.id,req.params.id);
+      const user=await tx.user.findUniqueOrThrow({where:{id:req.params.id}});
+      await tx.authThrottle.deleteMany({where:{key:{in:[throttleKey('login-account',user.account),throttleKey('password-change',user.id)]}}});
+      await tx.platformAudit.create({data:auditData(req.identity.user.id,'USER_LOGIN_UNLOCK','user',user.id)});
+    },{isolationLevel:'Serializable'});res.status(204).end();
+  }));
+  router.post('/users/:id/revoke-sessions',requirePermission('platform:user:manage'),route(async(req,res)=>{
+    await db.$transaction(async tx=>{
+      await protectUser(tx,req.identity.user.id,req.params.id);
+      await tx.user.findUniqueOrThrow({where:{id:req.params.id}});
+      await tx.session.updateMany({where:{userId:req.params.id,revokedAt:null},data:{revokedAt:new Date()}});
+      await tx.platformAudit.create({data:auditData(req.identity.user.id,'USER_REVOKE_SESSIONS','user',req.params.id)});
+    },{isolationLevel:'Serializable'});res.status(204).end();
   }));
   router.get('/admin/companies',requirePermission('platform:company:manage'),route(async(_req,res)=>res.json(await db.company.findMany({select:companyFields,orderBy:{name:'asc'},take:500}))));
   router.post('/admin/companies',requirePermission('platform:company:manage'),route(async(req,res)=>{
@@ -88,13 +118,22 @@ export function registerManagement(router:Router){
     const current=await db.role.findUnique({where:{id:req.params.id}});if(!current)throw new ApiFailure(404,'NOT_FOUND','角色不存在');
     const checked=input.permissionCodes?await validateRolePermissions(current.applicationId,input.permissionCodes):null;
     const role=await db.$transaction(async tx=>{
+      if(checked||input.active!==undefined)await protectRole(tx,req.identity.user.id,current.id);
       if(checked){await tx.rolePermission.deleteMany({where:{roleId:current.id}});await tx.rolePermission.createMany({data:checked.permissions.map(permission=>({roleId:current.id,permissionId:permission.id,applicationId:current.applicationId,scopeType:current.scopeType}))});}
       const result=await tx.role.update({where:{id:current.id},data:{name:input.name,active:input.active}});
       const assigned=await tx.roleAssignment.findMany({where:{roleId:current.id},select:{userId:true}});await tx.user.updateMany({where:{id:{in:assigned.map(a=>a.userId)}},data:{authzVersion:{increment:1}}});
       await ensureAdministrator(tx);await tx.platformAudit.create({data:auditData(req.identity.user.id,'ROLE_UPDATE','role',current.id,{fields:Object.keys(input)})});return result;
     },{isolationLevel:'Serializable'});res.json(role);
   }));
-  router.get('/users/:id/access',requirePermission('platform:authorization:manage'),route(async(req,res)=>res.json({memberships:await db.userCompany.findMany({where:{userId:req.params.id},include:{company:true}}),assignments:await db.roleAssignment.findMany({where:{userId:req.params.id},include:{role:true}})})));
+  router.get('/users/:id/access',requirePermission('platform:authorization:manage'),route(async(req,res)=>{
+    const user=await db.user.findUniqueOrThrow({where:{id:req.params.id},select:userFields});
+    const memberships=await db.userCompany.findMany({where:{userId:user.id},include:{company:true}});
+    const assignments=await db.roleAssignment.findMany({where:{userId:user.id},include:{role:true}});
+    const scopes=[{applicationCode:'platform',companyId:null as string|null},...memberships.flatMap(m=>['finance','sample'].map(applicationCode=>({applicationCode,companyId:m.companyId})))];
+    const effectiveAccess=[];
+    for(const scope of scopes){const permissionCodes=await effectivePermissions(user.id,scope.applicationCode,scope.companyId);if(permissionCodes.length)effectiveAccess.push({...scope,permissionCodes});}
+    res.json({user,memberships,assignments,effectiveAccess});
+  }));
   router.get('/authorization-options',requirePermission('platform:authorization:manage'),route(async(_req,res)=>{
     const [users,companies,roles]=await Promise.all([
       db.user.findMany({select:{id:true,account:true,displayName:true},orderBy:{displayName:'asc'},take:500}),
@@ -107,20 +146,22 @@ export function registerManagement(router:Router){
     if(new Set(input.companyIds).size!==input.companyIds.length)throw new ApiFailure(400,'DUPLICATE_COMPANY','公司不能重复');
     const count=await db.company.count({where:{id:{in:input.companyIds},active:true}});if(count!==input.companyIds.length)throw new ApiFailure(400,'INVALID_COMPANY','包含无效公司');
     await db.$transaction(async tx=>{
+      const revoked=await tx.roleAssignment.deleteMany({where:{userId:req.params.id,scopeType:'company',companyId:{notIn:input.companyIds}}});
       await tx.userCompany.updateMany({where:{userId:req.params.id},data:{active:false}});
       for(const companyId of input.companyIds)await tx.userCompany.upsert({where:{userId_companyId:{userId:req.params.id,companyId}},create:{userId:req.params.id,companyId},update:{active:true}});
-      await tx.user.update({where:{id:req.params.id},data:{authzVersion:{increment:1}}});await tx.platformAudit.create({data:auditData(req.identity.user.id,'MEMBERSHIP_UPDATE','user',req.params.id,{companyIds:input.companyIds})});
-    });res.status(204).end();
+      await tx.user.update({where:{id:req.params.id},data:{authzVersion:{increment:1}}});await tx.platformAudit.create({data:auditData(req.identity.user.id,'MEMBERSHIP_UPDATE','user',req.params.id,{companyIds:input.companyIds,revokedAssignments:revoked.count})});
+    },{isolationLevel:'Serializable'});res.status(204).end();
   }));
   router.post('/users/:id/assignments',requirePermission('platform:authorization:manage'),route(async(req,res)=>{
     const input=z.object({roleId:z.string().min(1),companyId:z.string().min(1).nullable().optional()}).strict().parse(req.body);
-    const role=await db.role.findUnique({where:{id:input.roleId},include:{application:true}});if(!role?.active||!role.application.active)throw new ApiFailure(400,'INVALID_ROLE','角色或应用未启用');
+    const assignment=await db.$transaction(async tx=>{
+    const role=await tx.role.findUnique({where:{id:input.roleId},include:{application:true}});if(!role?.active||!role.application.active)throw new ApiFailure(400,'INVALID_ROLE','角色或应用未启用');
     if((role.scopeType==='company'&&!input.companyId)||(role.scopeType==='instance'&&input.companyId))throw new ApiFailure(400,'INVALID_SCOPE','角色的数据范围不正确');
     if(role.scopeType==='company'){
-      const membership=await db.userCompany.findUnique({where:{userId_companyId:{userId:req.params.id,companyId:input.companyId!}},include:{company:true}});
+      const membership=await tx.userCompany.findUnique({where:{userId_companyId:{userId:req.params.id,companyId:input.companyId!}},include:{company:true}});
       if(!membership?.active||!membership.company.active)throw new ApiFailure(400,'MEMBERSHIP_REQUIRED','请先授予该公司的成员资格');
     }
-    const assignment=await db.$transaction(async tx=>{const result=await tx.roleAssignment.create({data:{userId:req.params.id,roleId:role.id,applicationId:role.applicationId,scopeType:role.scopeType,companyId:input.companyId??null}});await tx.user.update({where:{id:req.params.id},data:{authzVersion:{increment:1}}});await tx.platformAudit.create({data:auditData(req.identity.user.id,'AUTHORIZATION_GRANT','assignment',result.id,{userId:req.params.id,roleId:role.id,companyId:input.companyId??null})});return result;});res.status(201).json(assignment);
+    const result=await tx.roleAssignment.create({data:{userId:req.params.id,roleId:role.id,applicationId:role.applicationId,scopeType:role.scopeType,companyId:input.companyId??null}});await tx.user.update({where:{id:req.params.id},data:{authzVersion:{increment:1}}});await tx.platformAudit.create({data:auditData(req.identity.user.id,'AUTHORIZATION_GRANT','assignment',result.id,{userId:req.params.id,roleId:role.id,companyId:input.companyId??null})});return result;},{isolationLevel:'Serializable'});res.status(201).json(assignment);
   }));
   router.delete('/assignments/:id',requirePermission('platform:authorization:manage'),route(async(req,res)=>{
     await db.$transaction(async tx=>{const assignment=await tx.roleAssignment.delete({where:{id:req.params.id}});await tx.user.update({where:{id:assignment.userId},data:{authzVersion:{increment:1}}});await ensureAdministrator(tx);await tx.platformAudit.create({data:auditData(req.identity.user.id,'AUTHORIZATION_REVOKE','assignment',assignment.id,{userId:assignment.userId})});},{isolationLevel:'Serializable'});res.status(204).end();

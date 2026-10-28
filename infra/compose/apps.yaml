@@ -11,6 +11,7 @@ services:
       PLATFORM_DATABASE_URL: ${PLATFORM_DATABASE_URL:?required}
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:?required}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      TRUST_PROXY: '1'
       BOOTSTRAP_ACCOUNT: ${BOOTSTRAP_ACCOUNT:-owner}
       BOOTSTRAP_PASSWORD: ${BOOTSTRAP_PASSWORD:?required}
     networks: [platform-data, services]

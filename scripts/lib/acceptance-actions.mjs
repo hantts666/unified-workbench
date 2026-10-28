@@ -61,7 +61,9 @@ export async function runAction(action, env, client) {
       const loggedIn = await login();
       const me = await client.request('/api/platform/me');
       assert.equal(me.status, 200);
-      assert.deepEqual(me.data, loggedIn.data); break;
+      assert.equal(me.data.id,loggedIn.data.id);assert.equal(me.data.displayName,loggedIn.data.displayName);
+      const publicFields=new Set(['id','displayName','account','authzVersion','mustChangePassword','lastLoginAt','sessionExpiresAt']);
+      assert.ok(Object.keys(me.data).every(key=>publicFields.has(key)),'用户信息不能暴露身份机密'); break;
     }
     case 'reject-cross-origin-logout':
       await login();

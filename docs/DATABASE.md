@@ -18,6 +18,8 @@
 | passwordHash | `String` | — |
 | active | `Boolean` | @default(true) |
 | authzVersion | `Int` | @default(1) |
+| mustChangePassword | `Boolean` | @default(false)，初始/重置密码后禁止业务访问直到换密 |
+| lastLoginAt | `DateTime?` | 最近一次成功登录 |
 | createdAt | `DateTime` | @default(now()) |
 | updatedAt | `DateTime` | @updatedAt |
 | sessions | `Session[]` | — |
@@ -31,6 +33,8 @@
 | 字段 | 类型 | 约束 / 关系 |
 | --- | --- | --- |
 | tokenHash | `String` | @id |
+| id | `String` | @unique @default(uuid())，设备管理标识，不能用作登录令牌 |
+| userAgent | `String` | @default("")，登录浏览器信息，最多 300 字符 |
 | userId | `String` | — |
 | user | `User` | @relation(fields:[userId], references:[id], onDelete:Cascade) |
 | expiresAt | `DateTime` | — |
@@ -38,6 +42,16 @@
 | createdAt | `DateTime` | @default(now()) |
 
 索引与联合约束：`@@index([userId, expiresAt])`。
+
+### AuthThrottle
+
+持久化登录和修改密码尝试计数；通过 PostgreSQL 原子操作限制并发请求。
+
+| 字段 | 类型 | 约束 / 关系 |
+| --- | --- | --- |
+| key | `String` | @id，类型前缀与账号/来源地址的 SHA-256 摘要 |
+| attempts | `Int` | 当前窗口内尝试次数 |
+| expiresAt | `DateTime` | 窗口到期时间，索引 |
 
 ### Company
 

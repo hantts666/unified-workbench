@@ -524,3 +524,7 @@ p {
     padding: 20px 15px;
   }
 }
+
+.portal-account { display:grid; gap:20px; }
+.portal-password-form { margin-top:20px; max-width:440px; }
+.portal-forced-password { max-width:760px; padding:40px 24px; margin:auto; }

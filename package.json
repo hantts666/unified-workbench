@@ -53,7 +53,11 @@
     "acceptance:finance": "node scripts/acceptance.mjs finance",
     "public:audit": "node scripts/public-audit.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "npm run spec:check && npm test && npm run public:audit"
+    "check": "npm run spec:check && npm test && npm run public:audit",
+    "test:auth-security": "node --import tsx tests/auth-security.integration.mjs",
+    "test:auth-security-browser": "node --import tsx tests/auth-security-browser.integration.mjs",
+    "test:auth-security-deployed": "node --import tsx tests/auth-security-deployed.integration.mjs",
+    "auth:delivery-check": "node scripts/check-auth-delivery.mjs"
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "13.1.0",
